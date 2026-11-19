@@ -17,6 +17,19 @@ Eine kostenlose, werbefreie, installierbare **Mathe-Lern-PWA** für Kinder und J
 
 **Geprüft anhand des Repository-Codes:** 56 Lektionen, 170 feste und 5.275 stichprobenartig generierte korrekte Erwartungsantworten (25 Aufgabensätze pro Lektion), sechsmal Spezialfälle sowie eine simulierte Bedienungsfolge. Nicht bestätigt: visuelle Screenshots, reale Geräteinstallation, Safari/iPadOS und produktive Offline-Nutzung. Details in [QA-STATUS-2026-11-19.md](docs/QA-STATUS-2026-11-19.md).
 
+## Neu: Theorieunterricht vor jeder Übung
+
+Matheunterricht wie in der Schule: **erst verstehen, dann gemeinsam rechnen, anschließend selbstständig Aufgaben lösen**.
+
+Jede der **56 Lektionen** besitzt jetzt einen eigenen Unterricht mit vier aufeinander aufbauenden Phasen:
+
+1. **Was ist das?** Fachbegriffe und Alltagsnutzen verstehen.
+2. **Warum funktioniert das?** Rechenidee, ausführliche Erklärung, vorgerechnetes Lehrerbeispiel und gegebenenfalls interaktives Lernlabor.
+3. **Gemeinsam rechnen:** Drei Aufgaben schrittweise lösen – erst nachdenken, dann einen Hinweis aufdecken, danach die Lösung betrachten. Ohne Noten und Zeitdruck.
+4. **Danach selbst üben:** Kompakter Lernzettel und eigenständige Aufgaben. Der Unterricht ist jederzeit wiederholbar.
+
+Zusätzlich beginnen alle neun Lernwelten mit einer ausführlichen Einführung und Lernübersicht. Alle Theorieinhalte liegen im unabhängigen, offlinefähigen Modul `tutorials.js`. Abgeschlossene Unterrichtsteile werden pro Schülerprofil lokal gespeichert; der bisherige Fortschritt und die bestehenden Übungen bleiben erhalten.
+
 ## Was heute enthalten ist
 
 - **56 Lektionen**, neun Themenwelten, **170 feste Übungsaufgaben** mit Hinweisen und Musterlösungen.
@@ -63,6 +76,7 @@ Vollständige statische Anwendung (HTML, CSS, JavaScript, SVG) ohne fremde Laufz
 | \`app.js\` | Oberfläche, lokale Profile, Übungsrunden, Wiederholung und Fortschritt |
 | \`lessons.js\` | Erstes Paket mit 30 Lektionen |
 | \`additional-lessons.js\` | Erweiterungspaket mit 26 weiteren Lektionen |
+| \`tutorials.js\` | Schulischer Theorieunterricht für alle 56 Lektionen und neun Themenwelten |
 | \`math-engine.js\` | Exakte Arithmetik, Aufgabenvarianten, Diagnose |
 | \`curriculum.js\` | Klassenstufen und Lernvoraussetzungen |
 | \`visuals.js\` | Offline-SVG-Lernlabore |
