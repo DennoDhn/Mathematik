@@ -62,6 +62,8 @@
  const attemptsCount = () => Object.values(state.progress).reduce((s,p)=>s+(p.attempts||0),0);
  const pct = (n,d) => d?Math.round(n/d*100):0;
  const equivalent=(value,task)=>ENGINE.check(value,task).correct;
+ const roundSize=()=>({5:3,10:6,15:9})[Number(state.settings.duration)]||6;
+ const lessonRoundSize=l=>ENGINE.generator(l.id,1).length?roundSize():Math.min(roundSize(),l.questions.length);
  const viewButton = (text,view,id="",cls="")=>'<button type="button" class="btn '+cls+'" data-go="'+escapeHTML(view)+'" data-id="'+escapeHTML(id)+'">'+escapeHTML(text)+'</button>';
  const navButton = (text,view)=>'<button class="navbutton'+(screen.view===view?' active':'')+'" data-go="'+view+'" type="button">'+text+'</button>';
  const progressBar = (value,total)=>'<div class="bar barsmall" role="progressbar" aria-label="Fortschritt" aria-valuenow="'+value+'" aria-valuemin="0" aria-valuemax="'+total+'"><span style="width:'+pct(value,total)+'%"></span></div>';
@@ -103,12 +105,12 @@
   html+='<section class="lesson-box"><h2>Beispiel</h2><div class="example"><strong>'+formatMath(l.example)+'</strong><small>'+formatMath(l.explain)+'</small></div></section>';
   html+='<section class="lesson-box rule"><h2>Merksatz</h2><p>'+escapeHTML(l.rule)+'</p></section>';
   if(!short)html+='<section class="lesson-box warning"><h2>Pass auf!</h2><p>'+escapeHTML(l.trap)+'</p></section>';
-  html+='<div class="actions"><button class="btn primary" data-action="start" data-id="'+l.id+'">Jetzt '+(ENGINE.generator(l.id,1).length?6:l.questions.length)+' Aufgaben lösen</button>'+viewButton("Zur Themenübersicht","topic",g.id,"ghost")+'<button class="btn ghost" data-action="print" type="button">Lernzettel drucken</button></div>';
+  html+='<div class="actions"><button class="btn primary" data-action="start" data-id="'+l.id+'">Jetzt '+lessonRoundSize(l)+' Aufgaben lösen</button>'+viewButton("Zur Themenübersicht","topic",g.id,"ghost")+'<button class="btn ghost" data-action="print" type="button">Lernzettel drucken</button></div>';
   return html;
  }
  function startPractice(id){
   const l=getLesson(id);if(!l)return;
-  session={id,index:0,score:0,tries:0,hints:0,answered:false,revealed:false,draft:"",questions:ENGINE.createSet(l,Date.now()+Math.floor(Math.random()*1000000))};
+  session={id,index:0,score:0,tries:0,hints:0,answered:false,revealed:false,draft:"",questions:ENGINE.createSet(l,Date.now()+Math.floor(Math.random()*1000000),roundSize())};
   result=null;screen={view:"practice",id};saveSession();render();
  }
  function practice(){
@@ -145,6 +147,11 @@
   const done=passed(),total=LESSONS.length;
   return '<div class="eyebrow">Lernstand auf diesem Gerät</div><h1>Mein Fortschritt</h1><div class="stats"><div class="stat"><strong>'+done+'</strong><span>Gelernt</span></div><div class="stat"><strong>'+attemptsCount()+'</strong><span>Runden</span></div><div class="stat"><strong>'+pct(done,total)+' %</strong><span>Fortschritt</span></div></div>'+progressBar(done,total)+'<h2 class="section">Deine Lernwelten</h2>'+GROUPS.map(g=>{const ls=groupLessons(g.id),n=ls.filter(l=>state.progress[l.id]?.passed).length;return '<section class="lesson-box"><div class="kicker"><strong>'+escapeHTML(g.title)+'</strong><span>'+n+' / '+ls.length+'</span></div>'+progressBar(n,ls.length)+'</section>';}).join("")+'<p class="note">Dies ist eine Orientierung, keine Schulnote. „Gelernt“ bedeutet, dass mindestens 75 % der Fragen in einer Übungsrunde beim ersten Versuch richtig beantwortet wurden.</p>';
  }
+ function practiceControls(){
+  const current=Number(state.settings.duration)||10;
+  return '<section class="lesson-box"><h2>Mein Lerntempo</h2><p>Wähle, wie viele Aufgaben du pro Runde machen willst. Ohne Zeitlimit.</p><div class="chipset">'+
+    [5,10,15].map(n=>'<button type="button" class="chip '+(current===n?'selected':'')+'" aria-pressed="'+(current===n)+'" data-action="set-duration" data-id="'+n+'">Ca. '+n+' Minuten</button>').join("")+'</div></section>';
+ }
  function themeControls(){
   const current=state.settings.theme==="light"?"light":"dark";
   return '<section class="lesson-box"><h2>Darstellung</h2><p>Wähle das Design, das für dich am angenehmsten lesbar ist.</p><div class="chipset">'+
@@ -155,7 +162,7 @@
   return '<section class="lesson-box"><h2>Profile auf diesem Gerät</h2><p>Geschwister können hier eigene Lernstände anlegen.</p><div class="chipset">'+buttons+'</div><form id="new-profile-form"><div class="formrow"><div><label class="fieldlabel" for="new-name">Neues Profil</label><input id="new-name" name="name" maxlength="40" required class="field" placeholder="Name oder Spitzname"></div><div><label for="new-grade" class="fieldlabel">Klasse</label><select id="new-grade" name="grade" class="field">'+[5,6,7,8].map(n=>'<option value="'+n+'">'+n+'. Klasse</option>').join("")+'</select></div></div><button type="submit" class="btn">Profil hinzufügen</button></form></section>';
  }
  function settings(){
-  return '<div class="eyebrow">Deine App</div><h1>Einstellungen</h1><section class="lesson-box"><h2>Schülerprofil</h2><form id="settings-form"><div class="formrow"><div><label class="fieldlabel" for="settings-name">Name / Spitzname</label><input class="field" id="settings-name" name="name" maxlength="40" required value="'+escapeHTML(state.profile.name)+'"></div><div><label class="fieldlabel" for="settings-grade">Klasse</label><select class="field" id="settings-grade" name="grade">'+[5,6,7,8].map(n=>'<option value="'+n+'"'+(String(n)===String(state.profile.grade)?' selected':'')+'>'+n+'. Klasse</option>').join("")+'</select></div></div><label class="check"><input name="short" type="checkbox"'+(state.settings.short?' checked':'')+'> Kurze Erklärungen bevorzugen</label><div class="actions"><button class="btn primary" type="submit">Speichern</button></div></form></section>'+profilesSection()+themeControls()+'<section class="lesson-box"><h2>Lernstand sichern</h2><p>Dein Fortschritt wird lokal auf diesem Gerät gespeichert. Sichere ihn als Datei, wenn du den Browser wechselst oder Daten löschst.</p><div class="actions"><button class="btn" data-action="export">Sicherung herunterladen</button><label class="btn" for="import-file">Sicherung importieren</label><input id="import-file" type="file" accept="application/json,.json" class="sr-only"></div></section><section class="lesson-box warning"><h2>Daten löschen</h2><p>Alle lokalen Lernstände und das Profil auf diesem Gerät zurücksetzen.</p><button class="btn ghost" data-action="reset">Alle Daten löschen</button></section><p id="message" role="status" aria-live="polite"></p>';
+  return '<div class="eyebrow">Deine App</div><h1>Einstellungen</h1><section class="lesson-box"><h2>Schülerprofil</h2><form id="settings-form"><div class="formrow"><div><label class="fieldlabel" for="settings-name">Name / Spitzname</label><input class="field" id="settings-name" name="name" maxlength="40" required value="'+escapeHTML(state.profile.name)+'"></div><div><label class="fieldlabel" for="settings-grade">Klasse</label><select class="field" id="settings-grade" name="grade">'+[5,6,7,8].map(n=>'<option value="'+n+'"'+(String(n)===String(state.profile.grade)?' selected':'')+'>'+n+'. Klasse</option>').join("")+'</select></div></div><label class="check"><input name="short" type="checkbox"'+(state.settings.short?' checked':'')+'> Kurze Erklärungen bevorzugen</label><div class="actions"><button class="btn primary" type="submit">Speichern</button></div></form></section>'+profilesSection()+themeControls()+practiceControls()+'<section class="lesson-box"><h2>Lernstand sichern</h2><p>Dein Fortschritt wird lokal auf diesem Gerät gespeichert. Sichere ihn als Datei, wenn du den Browser wechselst oder Daten löschst.</p><div class="actions"><button class="btn" data-action="export">Sicherung herunterladen</button><label class="btn" for="import-file">Sicherung importieren</label><input id="import-file" type="file" accept="application/json,.json" class="sr-only"></div></section><section class="lesson-box warning"><h2>Daten löschen</h2><p>Alle lokalen Lernstände und das Profil auf diesem Gerät zurücksetzen.</p><button class="btn ghost" data-action="reset">Alle Daten löschen</button></section><p id="message" role="status" aria-live="polite"></p>';
  }
  function render(){
   document.documentElement.dataset.theme=state.settings.theme==="light"?"light":"dark";
@@ -195,6 +202,7 @@
   if(type==="start"){startPractice(action.dataset.id);return;}
   if(type==="switch-profile"){switchProfile(action.dataset.id);return;}
   if(type==="set-theme"){state.settings.theme=action.dataset.id==="light"?"light":"dark";save();render();return;}
+  if(type==="set-duration"){state.settings.duration=[5,10,15].includes(Number(action.dataset.id))?Number(action.dataset.id):10;save();render();return;}
   if(type==="toggle-short"){state.settings.short=!state.settings.short;save();render();return;}
   if(type==="print"){window.print();return;}
   if(type==="hint"){
