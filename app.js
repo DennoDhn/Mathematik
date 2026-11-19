@@ -3,10 +3,12 @@
  const {GROUPS,LESSONS} = window.MATHE_DATA || {GROUPS:[],LESSONS:[]};
  const ENGINE=window.MATHE_ENGINE,CURRICULUM=window.MATHE_CURRICULUM,VISUALS=window.MATHE_VISUALS;
  if(!ENGINE||!CURRICULUM||!VISUALS)throw Error("Ein Lernmodul konnte nicht geladen werden.");
- const KEY = "mathe-hero-progress-v1";
+ const KEY="mathe-hero-progress-v1",SESSION_KEY="mathe-hero-running-lesson-v2";
+ const clearSession=()=>{try{localStorage.removeItem(SESSION_KEY)}catch{}};
+ const saveSession=()=>{try{if(session)localStorage.setItem(SESSION_KEY,JSON.stringify({profileId:state.activeProfileId,session}));}catch{}};
  const root = document.querySelector("#app");
  const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
- const go = (view,id) => { screen={view,id}; result=null; session=null; window.scrollTo({top:0,behavior:"instant"}); render(); };
+ const go=(view,id)=>{screen={view,id};result=null;session=null;clearSession();window.scrollTo({top:0,behavior:"instant"});render();};
  const read=()=>{
   try{
    const s=JSON.parse(localStorage.getItem(KEY)||"null");
@@ -26,6 +28,12 @@
  };
  const state=read()||{version:2,activeProfileId:null,profiles:{},profile:null,progress:{},settings:{short:false}};
  let screen={view:"home",id:null},session=null,result=null,deferredInstall=null;
+ try{
+  const pending=JSON.parse(localStorage.getItem(SESSION_KEY)||"null");
+  if(pending?.profileId===state.activeProfileId&&getLesson(pending.session?.id)&&Array.isArray(pending.session?.questions)){
+   session=pending.session;screen={view:"practice",id:session.id};
+  }
+ }catch{clearSession();}
  const save=()=>{
   try{
    if(state.profile&&state.activeProfileId)state.profiles[state.activeProfileId]={profile:state.profile,progress:state.progress,settings:state.settings};
@@ -99,7 +107,7 @@
  function startPractice(id){
   const l=getLesson(id);if(!l)return;
   session={id,index:0,score:0,tries:0,answered:false,revealed:false,draft:"",questions:ENGINE.createSet(l,Date.now()+Math.floor(Math.random()*1000000))};
-  result=null;screen={view:"practice",id};render();
+  result=null;screen={view:"practice",id};saveSession();render();
  }
  function practice(){
   const s=session,l=getLesson(screen.id);if(!s||!l)return '<p>Es ist gerade keine Übung gestartet.</p>'+viewButton("Themen","topics");
@@ -119,7 +127,7 @@
     state.progress[l.id]={...old,best:Math.max(score,old.best),attempts:old.attempts+1,
       passed:old.passed||success,reviewStreak:streak,secure:success,score,lastTotal:n,
       nextReview:new Date(Date.now()+days*86400000).toISOString(),updated:new Date().toISOString()};
-   save();s.saved=true;
+   save();s.saved=true;clearSession();
   }
   const success=score>=Math.ceil(n*.75);
   const next=LESSONS[LESSONS.findIndex(x=>x.id===l.id)+1];
@@ -176,8 +184,8 @@
   if(type==="toggle-short"){state.settings.short=!state.settings.short;save();render();return;}
   if(type==="print"){window.print();return;}
   if(type==="hint"){const t=(session.questions||getLesson(session.id).questions)[session.index];result={correct:false,title:"Ein kleiner Tipp",body:t.hint};render();return;}
-  if(type==="reveal"){const t=(session.questions||getLesson(session.id).questions)[session.index];session.answered=true;result={correct:false,title:"So geht die Lösung: "+t.answer,body:t.solution};render();return;}
-  if(type==="next"){session.index++;session.answered=false;session.tries=0;session.draft="";result=null;render();document.querySelector("#answer")?.focus();return;}
+  if(type==="reveal"){const t=(session.questions||getLesson(session.id).questions)[session.index];session.answered=true;result={correct:false,title:"So geht die Lösung: "+t.answer,body:t.solution};saveSession();render();return;}
+  if(type==="next"){session.index++;session.answered=false;session.tries=0;session.draft="";result=null;saveSession();render();document.querySelector("#answer")?.focus();return;}
   if(type==="export"){
    const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="mathe-hero-lernstand.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);notify("Sicherung wurde erstellt.");return;
   }
@@ -210,9 +218,12 @@
     session.tries++;
     result={correct:false,title:"Noch nicht ganz – versuch es erneut.",body:validation.reason||task.hint};
    }
-   render();
-   if(!session.answered)document.querySelector("#answer")?.focus();
+   saveSession();render();
+   if(!session.answered){const field=document.querySelector("#answer");field?.focus();field?.select?.();}
   }
+ });
+ document.addEventListener("input",event=>{
+   if(event.target?.id==="answer"&&session){session.draft=event.target.value;saveSession();}
  });
  document.addEventListener("change",async event=>{
   if(event.target.id!=="import-file")return;
