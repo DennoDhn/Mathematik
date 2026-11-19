@@ -381,3 +381,58 @@ hr{border:0;border-top:1px solid var(--edge);margin:20px 0}
 @media(max-width:690px){.hero-dashboard{grid-template-columns:1fr}.mission-art{display:none}.hero-dashboard{min-height:auto}.dashboard-section-head{align-items:start;gap:9px}.dashboard-micro{max-width:155px}}
 @media(max-width:490px){.world-card{min-height:174px}.world-glyph{height:59px;min-width:60px;width:60px;font-size:1.9rem}.hero-dashboard .hero-content h1{font-size:2.15rem}.dashboard-section-head h2{font-size:1.28rem}}
 @media(prefers-reduced-motion:reduce){.world-card:hover .world-glyph{transform:none}}
+
+
+/* SCHOOL 0.7 — teacher-led, progressive theory experience */
+.world-intro{position:relative;overflow:hidden;padding:clamp(23px,3.5vw,36px);margin:20px 0 27px;border:1px solid color-mix(in srgb,var(--blue) 34%,var(--edge));border-radius:25px;background:radial-gradient(ellipse at 100% 0%,rgba(102,179,255,.12),transparent 65%),var(--panel);box-shadow:0 15px 40px rgba(0,0,0,.07)}
+.world-intro::after{content:"∑";font-weight:900;position:absolute;right:25px;top:-37px;font-size:11rem;line-height:1;color:var(--blue);opacity:.075;transform:rotate(-8deg);pointer-events:none}
+.world-intro h2{font-size:clamp(1.6rem,3vw,2.15rem)}
+.world-intro p{max-width:65ch;position:relative;z-index:1}
+.intro-goals{padding:0;display:grid;gap:9px;list-style:none;max-width:670px;margin:19px 0 23px}
+.intro-goals li{position:relative;padding-left:30px;color:var(--text);font-size:.94rem}
+.intro-goals li::before{content:"✓";position:absolute;left:0;top:1px;display:grid;place-items:center;width:21px;height:21px;border-radius:8px;background:rgba(135,220,158,.13);color:var(--lime);font-size:.83rem;font-weight:850}
+.classroom-head{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:12px 0 14px}
+.classroom-head h1{max-width:22ch;margin:5px 0 11px}
+.classroom-head .lead{margin-bottom:0}
+.class-badge{flex:none;align-self:flex-start;padding:10px 15px;border-radius:12px;color:var(--text);border:1px solid var(--edge);background:var(--panel);font-size:.75rem;font-weight:850;letter-spacing:.1em}
+.class-tracker{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:13px 0 18px}
+.class-track{display:flex;align-items:center;gap:10px;min-height:67px;padding:12px;border:1px solid var(--edge);border-radius:15px;color:var(--subtle);background:var(--panel);font-size:.78rem;line-height:1.32;font-weight:700}
+.class-track-num{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--panel2);color:var(--muted);font-size:.85rem;font-weight:850}
+.class-track.current{border-color:color-mix(in srgb,var(--lime) 60%,var(--edge));color:var(--text);background:linear-gradient(125deg,rgba(117,184,164,.12),var(--panel))}
+.class-track.current .class-track-num{background:var(--lime);color:#0B2119}
+.class-track.done{color:var(--text)}.class-track.done .class-track-num{background:rgba(146,224,169,.19);color:var(--lime)}
+.classroom-panel{position:relative;overflow:hidden;padding:clamp(23px,4vw,43px);border:1px solid var(--edge);border-radius:27px;background:var(--panel);box-shadow:var(--shadow);min-height:330px}
+.classroom-panel::before{content:"";position:absolute;right:-120px;top:-130px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(102,168,242,.08),transparent 67%);pointer-events:none}
+.classroom-panel h2{font-size:clamp(1.5rem,3.1vw,2.35rem);margin-bottom:19px;max-width:32ch}
+.classroom-panel .eyebrow{margin-bottom:11px}
+.classroom-panel .actions{margin-top:22px}
+.class-lead{font-size:clamp(1.08rem,2vw,1.34rem);line-height:1.82;color:var(--text);max-width:69ch;margin:0 0 24px}
+.teacher-note,.teacher-point,.teacher-rule,.teacher-example,.teacher-caution{position:relative;padding:21px 23px;border-radius:17px;border:1px solid var(--edge);margin:18px 0}
+.teacher-note{background:rgba(112,178,249,.075);border-left:4px solid var(--blue)}
+.teacher-point{background:rgba(112,196,177,.07);border-left:4px solid var(--lime)}
+.teacher-rule{background:linear-gradient(125deg,rgba(101,166,239,.08),rgba(117,179,175,.05))}
+.teacher-example{background:linear-gradient(120deg,rgba(116,122,223,.13),rgba(133,92,190,.05));border-color:color-mix(in srgb,var(--violet) 33%,var(--edge))}
+.teacher-caution{background:rgba(202,132,87,.09);border-left:4px solid var(--coral)}
+.teacher-note strong,.teacher-point strong{display:block;color:var(--text);margin-bottom:7px}
+.teacher-rule h3,.teacher-example h3,.teacher-caution h3{margin:0 0 12px;font-size:1.18rem}
+.teacher-rule p,.teacher-example p,.teacher-caution p,.teacher-note p,.teacher-point p{color:var(--muted);line-height:1.8;margin:0}
+.teacher-rule ol{margin:13px 0 0;padding-left:24px;display:grid;gap:10px;color:var(--text)}
+.teacher-rule li{padding-left:7px;line-height:1.68}.teacher-rule li::marker{color:var(--lime);font-weight:850}
+.teacher-example .eyebrow{color:var(--violet)}
+.teacher-example h3{font-size:clamp(1.13rem,2.2vw,1.6rem);line-height:1.65}
+.guide-count{display:inline-flex;border-radius:10px;padding:7px 12px;background:rgba(111,172,249,.12);color:var(--blue);font-size:.8rem;font-weight:850;letter-spacing:.04em}
+.guide-question{padding:28px 0 22px;font-size:clamp(1.35rem,3vw,2rem);font-weight:850;line-height:1.65;color:var(--text);overflow-wrap:anywhere}
+.guide-timeline{display:grid;gap:14px;min-height:108px}
+.guide-wait{padding:20px;border:1px dashed var(--edge);background:var(--base);border-radius:15px;color:var(--muted)}
+.guide-step{display:flex;align-items:flex-start;gap:16px;padding:19px;border:1px solid var(--edge);background:var(--base);border-radius:15px}
+.guide-step>span{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--blue);color:#061D32;font-weight:900}
+.guide-step strong{display:block;color:var(--text);margin-bottom:5px}
+.guide-step p{line-height:1.8;margin:0;color:var(--muted);overflow-wrap:anywhere}
+.guide-step .guide-answer{margin-top:12px;padding:9px 13px;background:rgba(157,223,157,.1);border-radius:8px;color:var(--lime);font-weight:850}
+.class-footnote{text-align:center;margin:16px 0 0;font-size:.84rem;color:var(--subtle)}
+:root[data-theme="light"] .classroom-panel{box-shadow:0 18px 45px rgba(36,67,116,.07)}
+:root[data-theme="light"] .guide-answer{color:#286238}
+:root[data-theme="light"] .class-track.done .class-track-num{color:#2B6D46}
+:root[data-theme="light"] .intro-goals li::before{color:#276535}
+@media(max-width:760px){.class-tracker{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.class-track{min-height:55px;padding:9px}.class-badge{display:none}.classroom-panel{padding:22px}.teacher-note,.teacher-point,.teacher-rule,.teacher-example,.teacher-caution{padding:18px}.world-intro{padding:21px}}
+@media(max-width:430px){.class-track{font-size:.71rem;gap:7px}.class-track-num{height:26px;width:26px}.classroom-panel h2{font-size:1.52rem}.guide-question{padding:21px 0;font-size:1.42rem}}
