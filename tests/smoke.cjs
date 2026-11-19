@@ -26,6 +26,12 @@ for(const l of LESSONS){
    assert.ok(typeof q[key]==="string"&&q[key].trim(),l.id+": Frage "+key+" fehlt");
  }
 }
+const styles=fs.readFileSync(path.join(base,"styles.css"),"utf8");
+for(const contract of [".hero-dashboard",".world-card",".mission-art","data-theme","world-glyph"])
+ assert.ok(styles.includes(contract),"Premium design contract missing: "+contract);
+const source=fs.readFileSync(path.join(base,"app.js"),"utf8");
+assert.ok(source.includes("Letzte Übung fortsetzen"),"Resume action missing");
+assert.ok(source.includes("const pendingPractice="),"Resumable lesson recovery missing");
 const precache=fs.readFileSync(path.join(base,"sw.js"),"utf8");
 for(const name of ["index.html","styles.css","app.js","lessons.js","math-engine.js","curriculum.js","additional-lessons.js","visuals.js","manifest.webmanifest","icon.svg","icons/icon-192.png","icons/icon-512.png","icons/apple-touch-icon.png"]){
  assert.ok(fs.existsSync(path.join(base,name)),"Datei fehlt: "+name);
