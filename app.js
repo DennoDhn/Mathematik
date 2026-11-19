@@ -80,6 +80,20 @@
  const attemptsCount = () => Object.values(state.progress).reduce((s,p)=>s+(p.attempts||0),0);
  const pct = (n,d) => d?Math.round(n/d*100):0;
  const equivalent=(value,task)=>ENGINE.check(value,task).correct;
+ const SIMPLE_EXPLANATIONS={
+  bruchteile:"Eine Pizza wird in gleich große Stücke geschnitten. Die Zahl unten zeigt alle Stücke, die Zahl oben deine Stücke.",
+  kuerzen:"Vier von acht gleichen Stücken sind genauso viel wie eine von zwei Hälften. Teile oben und unten durch dieselbe Zahl. Die Menge bleibt gleich.",
+  erweitern:"Eine halbe Pizza kann man in zwei Viertel teilen. Es sind mehr Stücke, aber nicht mehr Pizza. Multipliziere oben und unten mit derselben Zahl.",
+  hauptnenner:"Du kannst Hälften und Viertel leichter zählen, wenn du zuerst aus den Hälften Viertel machst. Dann sind alle Stücke gleich groß.",
+  dezimalstellen:"Bei 0,5 hast du fünf von zehn Teilen. Bei 0,05 hast du fünf von hundert. Die Stelle hinter dem Komma macht den Unterschied.",
+  bruchkomma:"Der Bruchstrich bedeutet geteilt: Eins durch vier ergibt 0,25. Andersherum sind 0,25 genau 25 Hundertstel.",
+  kommamal:"Rechne erst ohne Komma. Zähle dann die Nachkommastellen beider Zahlen zusammen und setze das Komma im Ergebnis.",
+  kommageteilt:"Wenn du beide Zahlen gleich oft mit zehn multiplizierst, bleibt die Division gleich. Dann kannst du mit ganzen Zahlen rechnen.",
+  prozente:"Prozent heißt von hundert. 25 Prozent sind 25 von 100 – genau ein Viertel.",
+  dreisatz:"Rechne erst aus, was ein Stück kostet. Dann kannst du den Preis für jede beliebige Stückzahl ausrechnen.",
+  gleichung:"Eine Gleichung ist wie eine Waage. Was du links wegnimmst, musst du rechts genauso wegnehmen, damit beide Seiten gleich bleiben.",
+  flaeche:"Stell dir lauter kleine Quadrate auf dem Boden vor. Länge mal Breite zählt, wie viele davon in ein Rechteck passen."
+ };
  const roundSize=()=>({5:3,10:6,15:9})[Number(state.settings.duration)]||6;
  const lessonRoundSize=l=>ENGINE.generator(l.id,1).length?roundSize():Math.min(roundSize(),l.questions.length);
  const viewButton = (text,view,id="",cls="")=>'<button type="button" class="btn '+cls+'" data-go="'+escapeHTML(view)+'" data-id="'+escapeHTML(id)+'">'+escapeHTML(text)+'</button>';
@@ -156,7 +170,7 @@
   if(s.index>=questions.length)return practiceDone(l,s);
   const task=questions[s.index],n=questions.length;
   const feedback=result?'<div class="feedback'+(result.correct?'':' error')+'" role="status"><strong>'+escapeHTML(result.title)+'</strong><p>'+escapeHTML(result.body)+'</p></div>':'';
-  return crumb(getGroup(l.group),l)+'<div class="eyebrow">Deine Übung</div><h1>'+escapeHTML(l.title)+'</h1><div class="kicker"><span class="question-count">Aufgabe '+(s.index+1)+' von '+n+'</span><strong>'+s.score+' richtig</strong></div>'+progressBar(s.index,n)+'<section class="lesson-box"><h2>Du bist dran!</h2><p class="question">'+formatMath(task.question)+'</p><form id="answer-form"><label class="fieldlabel" for="answer">Deine Antwort</label><input id="answer" class="field" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="text" placeholder="Hier dein Ergebnis eingeben" aria-describedby="answerhelp" value="'+escapeHTML(s.draft||"")+'" '+(s.answered?'disabled':'')+' required><p id="answerhelp" class="note" style="margin:8px 0 0">Brüche wie 3/4 eingeben; Dezimalzahlen mit Komma.</p><div class="actions" style="margin-top:18px">'+(!s.answered?'<button class="btn primary" type="submit">Prüfen</button>':'')+(!s.answered?'<button type="button" class="btn ghost" data-action="hint">Tipp anzeigen</button><button type="button" class="btn ghost" data-action="simplify">Ich verstehe das nicht</button>':'')+(!s.answered?'<button type="button" class="btn ghost" data-action="reveal">Lösung zeigen</button>':'')+(s.answered?'<button class="btn primary" type="button" data-action="next">'+(s.index===n-1?'Auswertung ansehen':'Nächste Aufgabe')+'</button>':'')+'</div></form>'+feedback+'</section><div class="actions">'+viewButton("Zurück zur Erklärung","lesson",l.id,"ghost")+'</div>';
+  return crumb(getGroup(l.group),l)+'<div class="eyebrow">Deine Übung</div><h1>'+escapeHTML(l.title)+'</h1><div class="kicker"><span class="question-count">Aufgabe '+(s.index+1)+' von '+n+'</span><strong>'+s.score+' ohne Hilfe richtig</strong></div>'+progressBar(s.index,n)+'<section class="lesson-box"><h2>Du bist dran!</h2><p class="question">'+formatMath(task.question)+'</p><form id="answer-form"><label class="fieldlabel" for="answer">Deine Antwort</label><input id="answer" class="field" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="text" placeholder="Hier dein Ergebnis eingeben" aria-describedby="answerhelp" value="'+escapeHTML(s.draft||"")+'" '+(s.answered?'disabled':'')+' required><p id="answerhelp" class="note" style="margin:8px 0 0">Brüche wie 3/4 eingeben; Dezimalzahlen mit Komma.</p><div class="actions" style="margin-top:18px">'+(!s.answered?'<button class="btn primary" type="submit">Prüfen</button>':'')+(!s.answered?'<button type="button" class="btn ghost" data-action="hint">Tipp anzeigen</button><button type="button" class="btn ghost" data-action="simplify">Ich verstehe das nicht</button>':'')+(!s.answered?'<button type="button" class="btn ghost" data-action="reveal">Lösung zeigen</button>':'')+(s.answered?'<button class="btn primary" type="button" data-action="next">'+(s.index===n-1?'Auswertung ansehen':'Nächste Aufgabe')+'</button>':'')+'</div></form>'+feedback+'</section><div class="actions">'+viewButton("Zurück zur Erklärung","lesson",l.id,"ghost")+'</div>';
  }
  function practiceDone(l,s){
   const n=(s.questions||l.questions).length,score=s.score,old=state.progress[l.id]||{best:0,attempts:0,passed:false};
@@ -172,7 +186,7 @@
   }
   const success=score>=Math.ceil(n*.75);
   const next=LESSONS[LESSONS.findIndex(x=>x.id===l.id)+1];
-  return '<div class="hero"><div class="eyebrow">Runde abgeschlossen</div><h1>'+(success?'Das hast du geschafft!':'Gut geübt!')+'</h1><p class="lead">Du hast '+score+' von '+n+' Aufgaben beim ersten Versuch richtig gelöst.'+(success?' Diese Lektion zählt jetzt als gelernt.':' Du kannst sie nochmal üben – ohne Druck.')+'</p><div class="actions"><button class="btn primary" data-action="start" data-id="'+l.id+'">Nochmal üben</button>'+viewButton("Erklärung nachlesen","lesson",l.id,"ghost")+(next?viewButton("Nächste Lektion","lesson",next.id,"ghost"):'')+'</div></div>';
+  return '<div class="hero"><div class="eyebrow">Runde abgeschlossen</div><h1>'+(success?'Das hast du geschafft!':'Gut geübt!')+'</h1><p class="lead">Du hast '+score+' von '+n+' Aufgaben beim ersten Versuch ohne Hilfe richtig gelöst.'+(success?' Diese Lektion zählt jetzt als gelernt.':' Du kannst sie nochmal üben – ohne Druck.')+'</p><div class="actions"><button class="btn primary" data-action="start" data-id="'+l.id+'">Nochmal üben</button>'+viewButton("Erklärung nachlesen","lesson",l.id,"ghost")+(next?viewButton("Nächste Lektion","lesson",next.id,"ghost"):'')+'</div></div>';
  }
  function review(){
   const todo=LESSONS.filter(l=>state.progress[l.id]&&(!state.progress[l.id].passed||isDue(state.progress[l.id])||state.progress[l.id].secure===false));
@@ -253,8 +267,9 @@
   }
   if(type==="simplify"){
    const l=getLesson(session.id);
-   result={correct:false,title:"Ganz einfach erklärt",body:l.brief+" "+l.explain};
-   render();return;
+   session.hints=(session.hints||0)+1;
+   result={correct:false,title:"Ganz einfach erklärt",body:SIMPLE_EXPLANATIONS[l.id]||l.brief+" "+l.explain};
+   saveSession();render();return;
   }
   if(type==="reveal"){const t=(session.questions||getLesson(session.id).questions)[session.index];session.answered=true;result={correct:false,title:"So geht die Lösung: "+t.answer,body:t.solution};saveSession();render();return;}
   if(type==="next"){session.index++;session.answered=false;session.tries=0;session.hints=0;session.draft="";result=null;saveSession();render();document.querySelector("#answer")?.focus();return;}
@@ -296,8 +311,9 @@
    session.draft=value;
    const validation=ENGINE.check(value,task);
    if(validation.correct){
-    if(session.tries===0)session.score++;
-    session.answered=true;result={correct:true,title:"Richtig!",body:task.solution};
+    const independent=session.tries===0&&(session.hints||0)===0;
+    if(independent)session.score++;
+    session.answered=true;result={correct:true,title:independent?"Richtig!":"Richtig gelöst – mit Unterstützung",body:task.solution};
    }else{
     session.tries++;
     result={correct:false,title:"Noch nicht ganz – versuch es erneut.",body:validation.reason||ENGINE.diagnose(value,task)||task.hint};
