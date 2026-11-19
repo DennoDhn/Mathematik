@@ -69,7 +69,7 @@ L("bruchkomma","dezimal","Brüche und Dezimalzahlen umwandeln","Jeder Bruch bede
 [Q("Schreibe 1/4 als Dezimalzahl.","0,25","1 : 4 rechnen.","1/4 = 0,25."),Q("Schreibe 3/5 als Dezimalzahl.","0,6","Erweitere auf Zehntel.","3/5 = 6/10 = 0,6."),Q("Schreibe 0,75 als vollständig gekürzten Bruch.","3/4","75/100 kürzen.","75/100 = 3/4."),Q("Schreibe 1/8 als Dezimalzahl.","0,125","1 durch 8 teilen.","1 : 8 = 0,125.")]),
 L("kommaplus","dezimal","Kommazahlen plus und minus","Bei Kommazahlen rechnest du ähnlich wie mit ganzen Zahlen – wichtig ist der Stellenwert.","Damit du Geldbeträge, Längen und Messwerte zusammenrechnen kannst.",
 ["Schreibe die Zahlen untereinander: Komma unter Komma.","Ergänze bei Bedarf Nullen am Ende.","Rechne von rechts nach links und setze das Komma an dieselbe Stelle."],
-"2,50 + 1,25 = 3,75","50 Cent plus 25 Cent sind 75 Cent. Dazu kommen 3 Euro.","Komma unter Komma – dann normal rechnen.","2,5 + 0,35 ist nicht 2,85? Doch: Schreibe 2,50 + 0,35 = 2,85.",
+"2,50 + 1,25 = 3,75","50 Cent plus 25 Cent sind 75 Cent. Dazu kommen 3 Euro.","Komma unter Komma – dann normal rechnen.","Schreibe 2,5 als 2,50. Dann ist 2,50 + 0,35 = 2,85.",
 [Q("2,5 + 1,25 = ?","3,75","Schreibe 2,50 + 1,25.","2,50 + 1,25 = 3,75."),Q("5,0 - 2,35 = ?","2,65","Schreibe 5,00 - 2,35.","5,00 - 2,35 = 2,65."),Q("0,7 + 0,08 = ?","0,78","0,70 + 0,08.","0,78.")]),
 L("kommamal","dezimal","Kommazahlen malnehmen","Beim Multiplizieren von Kommazahlen rechnest du zunächst ohne Komma.","So löst du Aufgaben mit Preisen, Längen und Mengen.",
 ["Rechne beide Zahlen so, als gäbe es kein Komma.","Zähle die Nachkommastellen beider Zahlen zusammen.","Setze im Ergebnis von rechts aus genauso viele Nachkommastellen."],
