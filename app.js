@@ -402,7 +402,7 @@
     return Object.fromEntries(LESSONS.filter(l=>progress[l.id]).map(l=>{
       const p=progress[l.id],n=Number(p.best)||0,attempts=Number(p.attempts)||0;
       return [l.id,{best:Math.max(0,Math.min(1000,n)),attempts:Math.max(0,Math.min(100000,attempts)),
-        passed:!!p.passed,reviewStreak:Math.max(0,Math.min(4,Number(p.reviewStreak)||0)),secure:!!p.secure,
+        passed:!!p.passed,theoryCompleted:!!p.theoryCompleted,reviewStreak:Math.max(0,Math.min(4,Number(p.reviewStreak)||0)),secure:!!p.secure,
         nextReview:typeof p.nextReview==="string"&&Number.isFinite(Date.parse(p.nextReview))?p.nextReview:null,
         updated:typeof p.updated==="string"?p.updated:""}];
     }));
