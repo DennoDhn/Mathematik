@@ -22,8 +22,10 @@ jobs:
           node --check curriculum.js
           node --check additional-lessons.js
           node --check visuals.js
+          node --check tutorials.js
       - name: Lesson data and offline assets
         run: |
           node tests/smoke.cjs
           node tests/validation.cjs
           node tests/app-flows.cjs
+          node tests/tutorial.cjs
