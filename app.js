@@ -32,7 +32,7 @@
  let screen={view:"home",id:null},session=null,result=null,deferredInstall=null;
  try{
   const pending=JSON.parse(localStorage.getItem(SESSION_KEY)||"null");
-  if(pending?.profileId===state.activeProfileId&&getLesson(pending.session?.id)&&Array.isArray(pending.session?.questions)){
+  if(pending?.profileId===state.activeProfileId&&LESSONS.some(l=>l.id===pending.session?.id)&&Array.isArray(pending.session?.questions)){
    session=pending.session;screen={view:"practice",id:session.id};
   }
  }catch{clearSession();}
@@ -68,7 +68,7 @@
  const groupLessons = id => LESSONS.filter(l=>l.group===id);
  function frame(content) {
   const isOffline= !navigator.onLine;
-  root.innerHTML = '<div class="app"><header class="top"><a href="./" class="brand" data-home="1"><span class="mark">M</span><span>MATHE HERO</span></a><div class="topright"><span class="pill '+(isOffline?'offline':'online')+'" id="connection">'+(isOffline?'Offline':'Online')+'</span><span class="pill">Klasse '+escapeHTML(state.profile?.grade||"6")+'</span><button type="button" class="btn small ghost install" id="install">Installieren</button></div></header><div class="layout"><nav class="sidebar" aria-label="Hauptnavigation">'+navButton("Start","home")+navButton("Themen","topics")+navButton("Wiederholen","review")+navButton("Mein Fortschritt","progress")+navButton("Einstellungen","settings")+'<aside class="sidebar-note">10 Minuten reichen für eine Runde.<br>Keine Werbung. Keine Anmeldung.<br>Dein Lernstand bleibt auf diesem Gerät.</aside></nav><main class="main" id="content" tabindex="-1">'+content+'</main></div><footer class="foot">MATHE HERO · Kostenlos, werbefrei & offline nach dem ersten Laden · Version 0.1</footer></div>';
+  root.innerHTML = '<div class="app"><header class="top"><a href="./" class="brand" data-home="1"><span class="mark">M</span><span>MATHE HERO</span></a><div class="topright"><span class="pill '+(isOffline?'offline':'online')+'" id="connection">'+(isOffline?'Offline':'Online')+'</span><span class="pill">Klasse '+escapeHTML(state.profile?.grade||"6")+'</span><button type="button" class="btn small ghost install" id="install">Installieren</button></div></header><div class="layout"><nav class="sidebar" aria-label="Hauptnavigation">'+navButton("Start","home")+navButton("Themen","topics")+navButton("Wiederholen","review")+navButton("Mein Fortschritt","progress")+navButton("Einstellungen","settings")+'<aside class="sidebar-note">10 Minuten reichen für eine Runde.<br>Keine Werbung. Keine Anmeldung.<br>Dein Lernstand bleibt auf diesem Gerät.</aside></nav><main class="main" id="content" tabindex="-1">'+content+'</main></div><footer class="foot">MATHE HERO · Kostenlos, werbefrei & offline nach dem ersten Laden · Version 0.5</footer></div>';
   installState();
  }
  function crumb(group,lesson){
