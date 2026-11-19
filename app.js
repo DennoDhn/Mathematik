@@ -1,8 +1,8 @@
 "use strict";
 (() => {
  const {GROUPS,LESSONS} = window.MATHE_DATA || {GROUPS:[],LESSONS:[]};
- const ENGINE=window.MATHE_ENGINE,CURRICULUM=window.MATHE_CURRICULUM,VISUALS=window.MATHE_VISUALS;
- if(!ENGINE||!CURRICULUM||!VISUALS)throw Error("Ein Lernmodul konnte nicht geladen werden.");
+ const ENGINE=window.MATHE_ENGINE,CURRICULUM=window.MATHE_CURRICULUM,VISUALS=window.MATHE_VISUALS,TUTORIALS=window.MATHE_TUTORIALS;
+ if(!ENGINE||!CURRICULUM||!VISUALS||!TUTORIALS)throw Error("Ein Lernmodul konnte nicht geladen werden.");
  const KEY="mathe-hero-progress-v1",SESSION_KEY="mathe-hero-running-lesson-v2";
  const clearSession=()=>{try{localStorage.removeItem(SESSION_KEY)}catch{}};
  const saveSession=()=>{try{if(session)localStorage.setItem(SESSION_KEY,JSON.stringify({profileId:state.activeProfileId,session}));}catch{}};
@@ -11,6 +11,7 @@
  const formatMath=text=>escapeHTML(text).replace(/(\d+)\/([1-9]\d*)/g,(all,top,bottom)=>
   '<span class="math-frac" role="img" aria-label="Bruch '+top+' durch '+bottom+'"><span>'+top+'</span><span>'+bottom+'</span></span>');
  const go=(view,id)=>{
+  if(view==="classroom"&&(!teaching||teaching.id!==id))teaching={id,phase:0,example:0,reveal:0};
   if(view==="resume"){
    const saved=pendingPractice();
    if(saved){session=saved;screen={view:"practice",id:saved.id};result=null;render();document.querySelector("#answer")?.focus();}
@@ -47,7 +48,7 @@
    return s;
   }catch{return null;}
  };
- let screen={view:"home",id:null},session=null,result=null,deferredInstall=null;
+ let screen={view:"home",id:null},session=null,result=null,deferredInstall=null,teaching=null;
  try{
   const pending=JSON.parse(localStorage.getItem(SESSION_KEY)||"null");
   if(pending?.profileId===state.activeProfileId&&LESSONS.some(l=>l.id===pending.session?.id)&&Array.isArray(pending.session?.questions)){
@@ -75,7 +76,7 @@
  };
  const getLesson = id => LESSONS.find(l=>l.id===id);
  const getGroup = id => GROUPS.find(g=>g.id===id);
- const getStatus = id => {const p=state.progress[id];return isDue(p)||(p?.passed&&p.secure===false)?"Wiederholen":p?.passed?"Gelernt":p?"Weiter üben":"Noch offen";};
+ const getStatus = id => {const p=state.progress[id];return isDue(p)||(p?.passed&&p.secure===false)?"Wiederholen":p?.passed?"Gelernt":p?.theoryCompleted&&!p?.attempts?"Unterricht geschafft":p?"Weiter üben":"Noch offen";};
  const passed = () => LESSONS.filter(l=>state.progress[l.id]?.passed).length;
  const attemptsCount = () => Object.values(state.progress).reduce((s,p)=>s+(p.attempts||0),0);
  const pct = (n,d) => d?Math.round(n/d*100):0;
@@ -102,7 +103,7 @@
  const groupLessons = id => LESSONS.filter(l=>l.group===id);
  function frame(content) {
   const isOffline= !navigator.onLine;
-  root.innerHTML = '<div class="app"><header class="top"><a href="./" class="brand" data-home="1"><span class="mark">M</span><span>MATHE HERO</span></a><div class="topright"><span class="pill '+(isOffline?'offline':'online')+'" id="connection">'+(isOffline?'Offline':'Online')+'</span><span class="pill">Klasse '+escapeHTML(state.profile?.grade||"6")+'</span><button type="button" class="btn small ghost install" id="install">Installieren</button></div></header><div class="layout"><nav class="sidebar" aria-label="Hauptnavigation">'+navButton("Start","home")+navButton("Themen","topics")+navButton("Wiederholen","review")+navButton("Mein Fortschritt","progress")+navButton("Einstellungen","settings")+'<aside class="sidebar-note">10 Minuten reichen für eine Runde.<br>Keine Werbung. Keine Anmeldung.<br>Dein Lernstand bleibt auf diesem Gerät.</aside></nav><main class="main" id="content" tabindex="-1">'+content+'</main></div><footer class="foot">MATHE HERO · Kostenlos, werbefrei & offline nach dem ersten Laden · Version 0.5</footer></div>';
+  root.innerHTML = '<div class="app"><header class="top"><a href="./" class="brand" data-home="1"><span class="mark">M</span><span>MATHE HERO</span></a><div class="topright"><span class="pill '+(isOffline?'offline':'online')+'" id="connection">'+(isOffline?'Offline':'Online')+'</span><span class="pill">Klasse '+escapeHTML(state.profile?.grade||"6")+'</span><button type="button" class="btn small ghost install" id="install">Installieren</button></div></header><div class="layout"><nav class="sidebar" aria-label="Hauptnavigation">'+navButton("Start","home")+navButton("Themen","topics")+navButton("Wiederholen","review")+navButton("Mein Fortschritt","progress")+navButton("Einstellungen","settings")+'<aside class="sidebar-note">10 Minuten reichen für eine Runde.<br>Keine Werbung. Keine Anmeldung.<br>Dein Lernstand bleibt auf diesem Gerät.</aside></nav><main class="main" id="content" tabindex="-1">'+content+'</main></div><footer class="foot">MATHE HERO · Kostenlos, werbefrei & offline nach dem ersten Laden · Version 0.7</footer></div>';
   installState();
  }
  function crumb(group,lesson){
@@ -115,7 +116,7 @@
  function home() {
   const next=recommended(),pending=pendingPractice();
   const due=LESSONS.filter(l=>isDue(state.progress[l.id])||(state.progress[l.id]?.passed&&state.progress[l.id]?.secure===false)).length;
-  const primary=pending?viewButton("Letzte Übung fortsetzen","resume","","primary"):viewButton("Meine nächste Mission","lesson",next.id,"primary");
+  const primary=pending?viewButton("Letzte Übung fortsetzen","resume","","primary"):viewButton("Mit dem Unterricht starten",state.progress[next.id]?.theoryCompleted?"lesson":"classroom",next.id,"primary");
   return '<div class="hero hero-dashboard"><div class="hero-content"><div class="eyebrow">DEIN MATHE-STUDIO · KLASSE '+escapeHTML(state.profile.grade)+'</div>'+
    '<h1>Hallo, '+escapeHTML(state.profile.name)+'!<span class="hero-highlight">Bereit für den nächsten Schritt?</span></h1>'+
    '<p class="lead">Wenig lesen. Mehr verstehen. Übe in deinem Tempo und finde heraus, wie Mathe wirklich funktioniert.</p>'+
@@ -143,20 +144,70 @@
  function topics(){return '<div class="eyebrow">Dein Lernplan</div><h1>Alle Mathe-Themen</h1><p class="lead">Wähle, was du gerade in der Schule brauchst. Du kannst jedes Thema jederzeit wiederholen.</p>'+renderGroupGrid();}
  function topic(id){
   const group=getGroup(id);if(!group)return topics();
-  const lessons=groupLessons(group.id);
-  return crumb(group)+'<div class="eyebrow">Lernwelt '+group.emoji+'</div><h1>'+escapeHTML(group.title)+'</h1><p class="lead">'+escapeHTML(group.desc)+'</p><div class="lesson-list">'+lessons.map((l,i)=>'<button type="button" class="lesson-link" data-go="lesson" data-id="'+l.id+'"><span><strong>'+(i+1)+'. '+escapeHTML(l.title)+'</strong><small>'+escapeHTML(l.brief)+'</small></span><span class="right">Kl. '+CURRICULUM.metadata(l).grade+' · '+getStatus(l.id)+' →</span></button>').join("")+'</div>';
+  const lessons=groupLessons(group.id),w=TUTORIALS.WORLDS[group.id];
+  return crumb(group)+'<div class="eyebrow">Lernwelt '+escapeHTML(group.emoji)+'</div><h1>'+escapeHTML(group.title)+'</h1>'+
+    '<section class="world-intro"><div class="eyebrow">Bevor wir rechnen</div><h2>'+escapeHTML(w.name)+'</h2>'+
+    '<p class="lead">'+escapeHTML(w.lead)+'</p><p>'+escapeHTML(w.why)+'</p>'+
+    '<ul class="intro-goals">'+w.map.map(x=>'<li>'+escapeHTML(x)+'</li>').join("")+'</ul>'+
+    '<div class="actions">'+viewButton("Mit dem Theorieunterricht starten","classroom",lessons[0].id,"primary")+'</div></section>'+
+    '<div class="dashboard-section-head"><div><div class="eyebrow">Dein Lernweg</div><h2>Theorie → Gemeinsam rechnen → Üben</h2></div></div>'+
+    '<div class="lesson-list">'+lessons.map((l,i)=>'<button type="button" class="lesson-link" data-go="classroom" data-id="'+l.id+'"><span><strong>'+(i+1)+'. '+escapeHTML(l.title)+'</strong><small>'+escapeHTML(l.brief)+'</small></span><span class="right">Kl. '+CURRICULUM.metadata(l).grade+' · '+getStatus(l.id)+' →</span></button>').join("")+'</div>';
+ }
+ function classroom(id){
+  const l=getLesson(id);if(!l)return topics();
+  if(!teaching||teaching.id!==id)teaching={id,phase:0,example:0,reveal:0};
+  const t=TUTORIALS.get(l),c=teaching,g=getGroup(l.group);
+  const steps=["Was ist das?","Warum und wie?","Gemeinsam rechnen","Selbst üben"];
+  const tracker='<div class="class-tracker" role="list" aria-label="Unterrichtsphasen">'+steps.map((x,i)=>'<div role="listitem" class="class-track '+(i===c.phase?'current':i<c.phase?'done':'')+'"><span class="class-track-num">'+(i<c.phase?'✓':i+1)+'</span><span>'+x+'</span></div>').join("")+'</div>';
+  let body="";
+  if(c.phase===0){
+   body='<div class="eyebrow">UNTERRICHT · TEIL 1</div><h2>Was bedeutet das eigentlich?</h2>'+
+    '<p class="class-lead">'+formatMath(t.terms[0].text)+'</p>'+
+    '<div class="teacher-point"><strong>Warum brauche ich das?</strong><p>'+escapeHTML(l.why)+'</p></div>'+
+    '<div class="teacher-note"><strong>Das lernst du heute</strong><p>'+escapeHTML(l.brief)+'</p></div>'+
+    '<div class="actions"><button type="button" class="btn primary" data-action="teach-forward">Jetzt erklären lassen →</button>'+viewButton("Zum Lernzettel","lesson",l.id,"ghost")+'</div>';
+  }else if(c.phase===1){
+   body='<div class="eyebrow">UNTERRICHT · TEIL 2</div><h2>Warum funktioniert die Regel?</h2>'+
+    '<p class="class-lead">'+formatMath(t.terms[1].text)+'</p>'+
+    '<section class="teacher-rule"><h3>So machst du es richtig</h3><p>'+formatMath(t.terms[2].text)+'</p><ol>'+l.steps.map(x=>'<li>'+formatMath(x)+'</li>').join("")+'</ol></section>'+
+    '<section class="teacher-example"><div class="eyebrow">Der Lehrer macht es vor</div><h3>'+formatMath(l.example)+'</h3><p>'+formatMath(l.explain)+'</p></section>'+
+    VISUALS.markup(l)+
+    '<div class="teacher-point"><strong>Der Merksatz</strong><p>'+formatMath(l.rule)+'</p></div>'+
+    '<div class="actions"><button class="btn ghost" type="button" data-action="teach-back">← Zurück</button><button class="btn primary" type="button" data-action="teach-forward">Jetzt gemeinsam rechnen →</button></div>';
+  }else if(c.phase===2){
+   const x=t.practice[c.example],n=t.practice.length;
+   body='<div class="eyebrow">UNTERRICHT · TEIL 3</div><h2>Wir lösen die Aufgaben zusammen.</h2>'+
+    '<p class="lead">Du denkst zuerst selbst nach und kannst dir dann den nächsten Schritt erklären lassen. Ohne Zeitlimit oder Note.</p>'+
+    '<div class="guide-count">Gemeinsame Aufgabe '+(c.example+1)+' von '+n+'</div>'+
+    '<div class="guide-question">'+formatMath(x.question)+'</div>'+
+    '<div class="guide-timeline" aria-live="polite">'+
+      (c.reveal>=1?'<div class="guide-step"><span>1</span><div><strong>Dein erster Schritt</strong><p>'+formatMath(x.steps[0])+'</p></div></div>':'<p class="guide-wait">Was würdest du zuerst rechnen? Überlege, bevor du den Tipp aufdeckst.</p>')+
+      (c.reveal>=2?'<div class="guide-step"><span>2</span><div><strong>Gemeinsam zur Lösung</strong><p>'+formatMath(x.steps[1])+'</p><p class="guide-answer">Ergebnis: '+formatMath(x.answer)+'</p></div></div>':'')+
+      '</div><div class="actions">'+(c.reveal<2?'<button class="btn primary" type="button" data-action="teach-reveal">'+(c.reveal===0?'Ersten Rechenschritt zeigen':'Lösung Schritt für Schritt zeigen')+'</button>':
+      '<button class="btn primary" type="button" data-action="teach-next-example">'+(c.example+1<n?'Nächste gemeinsame Aufgabe →':'Weiter zum Lernzettel →')+'</button>')+
+      '<button class="btn ghost" type="button" data-action="teach-back">← Zurück</button></div>';
+  }else{
+   body='<div class="eyebrow">UNTERRICHT · ABSCHLUSS</div><h2>Jetzt kennst du die Rechenidee.</h2>'+
+    '<p class="class-lead">Du hast die Erklärung gelesen und drei Aufgaben mit Lösungswegen zusammen durchgerechnet.</p>'+
+    '<div class="teacher-rule"><h3>Denke an diese Regel</h3><p>'+formatMath(l.rule)+'</p></div>'+
+    '<div class="teacher-caution"><h3>Häufiger Fehler</h3><p>'+formatMath(l.trap)+'</p></div>'+
+    '<p>Schau dir jetzt deinen Lernzettel an. Danach rechnest du allein. Bei Schwierigkeiten kannst du diesen Unterricht jederzeit wiederholen.</p>'+
+    '<div class="actions">'+viewButton("Zum Lernzettel und zu den Übungen →","lesson",l.id,"primary")+'<button class="btn ghost" type="button" data-action="teach-restart">Unterricht wiederholen</button></div>';
+  }
+  return crumb(g,l)+'<div class="classroom-head"><div><div class="eyebrow">MATHE HERO · WIE IN DER SCHULE</div><h1>'+escapeHTML(l.title)+'</h1><p class="lead">Erst verstehen, dann zusammen lösen, danach selber rechnen.</p></div><span class="class-badge">KLASSE '+CURRICULUM.metadata(l).grade+'</span></div>'+
+     tracker+'<section class="classroom-panel">'+body+'</section><p class="class-footnote">Du bestimmst das Tempo – ohne Noten und ohne Zeitdruck.</p>';
  }
  function lesson(id) {
   const l=getLesson(id);if(!l)return topics();
   const g=getGroup(l.group),short=!!state.settings.short;
-  let html=crumb(g,l)+'<div class="eyebrow">Lektion · '+escapeHTML(g.title)+'</div><h1>'+escapeHTML(l.title)+'</h1><p class="lead">'+escapeHTML(l.brief)+'</p><div class="chipset"><span class="tag">'+getStatus(l.id)+'</span><button type="button" class="chip '+(short?'selected':'')+'" data-action="toggle-short" aria-pressed="'+short+'">Kurze Erklärung '+(short?'an':'aus')+'</button></div>';
+  let html=crumb(g,l)+'<div class="eyebrow">Lernzettel · '+escapeHTML(g.title)+'</div><h1>'+escapeHTML(l.title)+'</h1><p class="lead">'+escapeHTML(l.brief)+'</p><div class="chipset"><span class="tag">'+getStatus(l.id)+'</span><button type="button" class="chip '+(short?'selected':'')+'" data-action="toggle-short" aria-pressed="'+short+'">Kurze Erklärung '+(short?'an':'aus')+'</button></div>';
   if(!short) html+='<section class="lesson-box"><h2>Wozu brauche ich das?</h2><p>'+escapeHTML(l.why)+'</p></section>';
   html+=VISUALS.markup(l);
   html+='<section class="lesson-box"><h2>So geht’s – Schritt für Schritt</h2><ol>'+l.steps.map(s=>'<li>'+formatMath(s)+'</li>').join("")+'</ol></section>';
   html+='<section class="lesson-box"><h2>Beispiel</h2><div class="example"><strong>'+formatMath(l.example)+'</strong><small>'+formatMath(l.explain)+'</small></div></section>';
   html+='<section class="lesson-box rule"><h2>Merksatz</h2><p>'+escapeHTML(l.rule)+'</p></section>';
   if(!short)html+='<section class="lesson-box warning"><h2>Pass auf!</h2><p>'+escapeHTML(l.trap)+'</p></section>';
-  html+='<div class="actions"><button class="btn primary" data-action="start" data-id="'+l.id+'">Jetzt '+lessonRoundSize(l)+' Aufgaben lösen</button>'+viewButton("Zur Themenübersicht","topic",g.id,"ghost")+'<button class="btn ghost" data-action="print" type="button">Lernzettel drucken</button></div>';
+  html+='<div class="actions"><button class="btn primary" data-action="start" data-id="'+l.id+'">Jetzt '+lessonRoundSize(l)+' Aufgaben alleine lösen</button>'+viewButton("Theorieunterricht wiederholen","classroom",l.id,"ghost")+viewButton("Zur Themenübersicht","topic",g.id,"ghost")+'<button class="btn ghost" data-action="print" type="button">Lernzettel drucken</button></div>';
   return html;
  }
  function startPractice(id){
@@ -189,7 +240,7 @@
   return '<div class="hero"><div class="eyebrow">Runde abgeschlossen</div><h1>'+(success?'Das hast du geschafft!':'Gut geübt!')+'</h1><p class="lead">Du hast '+score+' von '+n+' Aufgaben beim ersten Versuch ohne Hilfe richtig gelöst.'+(success?' Diese Lektion zählt jetzt als gelernt.':' Du kannst sie nochmal üben – ohne Druck.')+'</p><div class="actions"><button class="btn primary" data-action="start" data-id="'+l.id+'">Nochmal üben</button>'+viewButton("Erklärung nachlesen","lesson",l.id,"ghost")+(next?viewButton("Nächste Lektion","lesson",next.id,"ghost"):'')+'</div></div>';
  }
  function review(){
-  const todo=LESSONS.filter(l=>state.progress[l.id]&&(!state.progress[l.id].passed||isDue(state.progress[l.id])||state.progress[l.id].secure===false));
+  const todo=LESSONS.filter(l=>state.progress[l.id]?.attempts&&(!state.progress[l.id].passed||isDue(state.progress[l.id])||state.progress[l.id].secure===false));
   const done=LESSONS.filter(l=>state.progress[l.id]?.passed&&!isDue(state.progress[l.id])&&state.progress[l.id].secure!==false);
   const items=[...todo,...done].slice(0,20);
   return '<div class="eyebrow">Nochmal sicher werden</div><h1>Wiederholen</h1><p class="lead">Du kannst alle geübten Themen wiederholen. Wenn du dich unsicher fühlst, lies zuerst den Lernzettel.</p>'+(items.length?'<div class="lesson-list">'+items.map(l=>'<button class="lesson-link" data-go="lesson" data-id="'+l.id+'"><span><strong>'+escapeHTML(l.title)+'</strong><small>'+getStatus(l.id)+'</small></span><span class="right">Üben →</span></button>').join("")+'</div>':'<div class="empty">Noch nichts geübt. Starte deine erste Lektion!<div class="actions" style="justify-content:center;margin-top:12px">'+viewButton("Themen entdecken","topics","","primary")+'</div></div>');
@@ -225,7 +276,8 @@
   switch(screen.view){
    case "topics":content=topics();break;
    case "topic":content=topic(screen.id);break;
-   case "lesson":content=lesson(screen.id);break;
+   case "classroom":content=classroom(screen.id);break;
+    case "lesson":content=lesson(screen.id);break;
    case "practice":content=practice();break;
    case "review":content=review();break;
    case "progress":content=progress();break;
@@ -254,6 +306,16 @@
   const action=event.target.closest("[data-action]");if(!action)return;
   const type=action.dataset.action;
   if(type==="start"){startPractice(action.dataset.id);return;}
+   if(type==="teach-forward"&&teaching){teaching.phase=Math.min(2,teaching.phase+1);teaching.example=0;teaching.reveal=0;render();document.querySelector("#content")?.focus();return;}
+   if(type==="teach-back"&&teaching){if(teaching.phase===2&&teaching.example>0){teaching.example--;teaching.reveal=0;}else teaching.phase=Math.max(0,teaching.phase-1);render();document.querySelector("#content")?.focus();return;}
+   if(type==="teach-reveal"&&teaching){teaching.reveal=Math.min(2,teaching.reveal+1);render();return;}
+   if(type==="teach-next-example"&&teaching&&teaching.phase===2){
+    if(teaching.reveal<2)return;
+    if(teaching.example+1<TUTORIALS.get(getLesson(teaching.id)).practice.length){teaching.example++;teaching.reveal=0;}
+    else{teaching.phase=3;state.progress[teaching.id]={...(state.progress[teaching.id]||{}),theoryCompleted:true};save();}
+    render();document.querySelector("#content")?.focus();return;
+   }
+   if(type==="teach-restart"&&teaching){teaching.phase=0;teaching.example=0;teaching.reveal=0;render();document.querySelector("#content")?.focus();return;}
   if(type==="switch-profile"){switchProfile(action.dataset.id);return;}
   if(type==="set-theme"){state.settings.theme=action.dataset.id==="light"?"light":"dark";save();render();return;}
   if(type==="set-duration"){state.settings.duration=[5,10,15].includes(Number(action.dataset.id))?Number(action.dataset.id):10;save();render();return;}
