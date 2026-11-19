@@ -305,3 +305,8 @@ hr{border:0;border-top:1px solid var(--edge);margin:20px 0}
  .lesson-box p,.lesson-box li{color:#222}
  .hero::before,.hero::after{display:none}
 }
+
+.math-frac{display:inline-flex;vertical-align:middle;flex-direction:column;text-align:center;line-height:1.12;min-width:1.25em;margin:0 .11em;font-variant-numeric:tabular-nums;color:inherit}
+.math-frac>span:first-child{border-bottom:2px solid currentColor;padding:0 .2em .12em}
+.math-frac>span:last-child{padding:.12em .2em 0}
+.question .math-frac{font-size:1.05em}
