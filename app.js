@@ -98,21 +98,27 @@
  }
  function startPractice(id){
   const l=getLesson(id);if(!l)return;
-  session={id,index:0,score:0,tries:0,answered:false,revealed:false};
+  session={id,index:0,score:0,tries:0,answered:false,revealed:false,draft:"",questions:ENGINE.createSet(l,Date.now()+Math.floor(Math.random()*1000000))};
   result=null;screen={view:"practice",id};render();
  }
  function practice(){
   const s=session,l=getLesson(screen.id);if(!s||!l)return '<p>Es ist gerade keine Übung gestartet.</p>'+viewButton("Themen","topics");
-  if(s.index>=l.questions.length)return practiceDone(l,s);
-  const task=l.questions[s.index],n=l.questions.length;
+  const questions=s.questions||l.questions;
+  if(s.index>=questions.length)return practiceDone(l,s);
+  const task=questions[s.index],n=questions.length;
   const feedback=result?'<div class="feedback'+(result.correct?'':' error')+'" role="status"><strong>'+escapeHTML(result.title)+'</strong><p>'+escapeHTML(result.body)+'</p></div>':'';
-  return crumb(getGroup(l.group),l)+'<div class="eyebrow">Deine Übung</div><h1>'+escapeHTML(l.title)+'</h1><div class="kicker"><span class="question-count">Aufgabe '+(s.index+1)+' von '+n+'</span><strong>'+s.score+' richtig</strong></div>'+progressBar(s.index,n)+'<section class="lesson-box"><h2>Du bist dran!</h2><p class="question">'+escapeHTML(task.question)+'</p><form id="answer-form"><label class="fieldlabel" for="answer">Deine Antwort</label><input id="answer" class="field" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="text" placeholder="Hier dein Ergebnis eingeben" aria-describedby="answerhelp" '+(s.answered?'disabled':'')+' required><p id="answerhelp" class="note" style="margin:8px 0 0">Brüche wie 3/4 eingeben; Dezimalzahlen mit Komma.</p><div class="actions" style="margin-top:18px">'+(!s.answered?'<button class="btn primary" type="submit">Prüfen</button>':'')+(!s.answered?'<button type="button" class="btn ghost" data-action="hint">Tipp anzeigen</button>':'')+(!s.answered?'<button type="button" class="btn ghost" data-action="reveal">Lösung zeigen</button>':'')+(s.answered?'<button class="btn primary" type="button" data-action="next">'+(s.index===n-1?'Auswertung ansehen':'Nächste Aufgabe')+'</button>':'')+'</div></form>'+feedback+'</section><div class="actions">'+viewButton("Zurück zur Erklärung","lesson",l.id,"ghost")+'</div>';
+  return crumb(getGroup(l.group),l)+'<div class="eyebrow">Deine Übung</div><h1>'+escapeHTML(l.title)+'</h1><div class="kicker"><span class="question-count">Aufgabe '+(s.index+1)+' von '+n+'</span><strong>'+s.score+' richtig</strong></div>'+progressBar(s.index,n)+'<section class="lesson-box"><h2>Du bist dran!</h2><p class="question">'+escapeHTML(task.question)+'</p><form id="answer-form"><label class="fieldlabel" for="answer">Deine Antwort</label><input id="answer" class="field" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="text" placeholder="Hier dein Ergebnis eingeben" aria-describedby="answerhelp" value="'+escapeHTML(s.draft||"")+'" '+(s.answered?'disabled':'')+' required><p id="answerhelp" class="note" style="margin:8px 0 0">Brüche wie 3/4 eingeben; Dezimalzahlen mit Komma.</p><div class="actions" style="margin-top:18px">'+(!s.answered?'<button class="btn primary" type="submit">Prüfen</button>':'')+(!s.answered?'<button type="button" class="btn ghost" data-action="hint">Tipp anzeigen</button>':'')+(!s.answered?'<button type="button" class="btn ghost" data-action="reveal">Lösung zeigen</button>':'')+(s.answered?'<button class="btn primary" type="button" data-action="next">'+(s.index===n-1?'Auswertung ansehen':'Nächste Aufgabe')+'</button>':'')+'</div></form>'+feedback+'</section><div class="actions">'+viewButton("Zurück zur Erklärung","lesson",l.id,"ghost")+'</div>';
  }
  function practiceDone(l,s){
-  const n=l.questions.length,score=s.score,old=state.progress[l.id]||{best:0,attempts:0,passed:false};
+  const n=(s.questions||l.questions).length,score=s.score,old=state.progress[l.id]||{best:0,attempts:0,passed:false};
   /* Only record results once per completed session. */
   if(!s.saved){
-   state.progress[l.id]={best:Math.max(score,old.best),attempts:old.attempts+1,passed:old.passed||score>=Math.ceil(n*.75),updated:new Date().toISOString()};
+   const success=score>=Math.ceil(n*.75);
+    const streak=success?Math.min(4,(old.reviewStreak||0)+1):0;
+    const days=success?[1,3,7,14][Math.max(0,streak-1)]:1;
+    state.progress[l.id]={...old,best:Math.max(score,old.best),attempts:old.attempts+1,
+      passed:old.passed||success,reviewStreak:streak,secure:success,score,lastTotal:n,
+      nextReview:new Date(Date.now()+days*86400000).toISOString(),updated:new Date().toISOString()};
    save();s.saved=true;
   }
   const success=score>=Math.ceil(n*.75);
@@ -120,9 +126,9 @@
   return '<div class="hero"><div class="eyebrow">Runde abgeschlossen</div><h1>'+(success?'Das hast du geschafft!':'Gut geübt!')+'</h1><p class="lead">Du hast '+score+' von '+n+' Aufgaben beim ersten Versuch richtig gelöst.'+(success?' Diese Lektion zählt jetzt als gelernt.':' Du kannst sie nochmal üben – ohne Druck.')+'</p><div class="actions"><button class="btn primary" data-action="start" data-id="'+l.id+'">Nochmal üben</button>'+viewButton("Erklärung nachlesen","lesson",l.id,"ghost")+(next?viewButton("Nächste Lektion","lesson",next.id,"ghost"):'')+'</div></div>';
  }
  function review(){
-  const todo=LESSONS.filter(l=>state.progress[l.id]&&!state.progress[l.id].passed);
-  const done=LESSONS.filter(l=>state.progress[l.id]?.passed);
-  const items=[...todo,...done].slice(0,12);
+  const todo=LESSONS.filter(l=>state.progress[l.id]&&(!state.progress[l.id].passed||isDue(state.progress[l.id])));
+  const done=LESSONS.filter(l=>state.progress[l.id]?.passed&&!isDue(state.progress[l.id]));
+  const items=[...todo,...done].slice(0,20);
   return '<div class="eyebrow">Nochmal sicher werden</div><h1>Wiederholen</h1><p class="lead">Du kannst alle geübten Themen wiederholen. Wenn du dich unsicher fühlst, lies zuerst den Lernzettel.</p>'+(items.length?'<div class="lesson-list">'+items.map(l=>'<button class="lesson-link" data-go="lesson" data-id="'+l.id+'"><span><strong>'+escapeHTML(l.title)+'</strong><small>'+getStatus(l.id)+'</small></span><span class="right">Üben →</span></button>').join("")+'</div>':'<div class="empty">Noch nichts geübt. Starte deine erste Lektion!<div class="actions" style="justify-content:center;margin-top:12px">'+viewButton("Themen entdecken","topics","","primary")+'</div></div>');
  }
  function progress(){
@@ -169,9 +175,9 @@
   if(type==="start"){startPractice(action.dataset.id);return;}
   if(type==="toggle-short"){state.settings.short=!state.settings.short;save();render();return;}
   if(type==="print"){window.print();return;}
-  if(type==="hint"){const t=getLesson(session.id).questions[session.index];result={correct:false,title:"Ein kleiner Tipp",body:t.hint};render();return;}
-  if(type==="reveal"){const t=getLesson(session.id).questions[session.index];session.answered=true;result={correct:false,title:"So geht die Lösung: "+t.answer,body:t.solution};render();return;}
-  if(type==="next"){session.index++;session.answered=false;session.tries=0;result=null;render();document.querySelector("#answer")?.focus();return;}
+  if(type==="hint"){const t=(session.questions||getLesson(session.id).questions)[session.index];result={correct:false,title:"Ein kleiner Tipp",body:t.hint};render();return;}
+  if(type==="reveal"){const t=(session.questions||getLesson(session.id).questions)[session.index];session.answered=true;result={correct:false,title:"So geht die Lösung: "+t.answer,body:t.solution};render();return;}
+  if(type==="next"){session.index++;session.answered=false;session.tries=0;session.draft="";result=null;render();document.querySelector("#answer")?.focus();return;}
   if(type==="export"){
    const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="mathe-hero-lernstand.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);notify("Sicherung wurde erstellt.");return;
   }
@@ -194,13 +200,15 @@
    event.preventDefault();if(!session||session.answered)return;
    const value=String(document.querySelector("#answer")?.value||"").trim();
    if(!value)return;
-   const task=getLesson(session.id).questions[session.index];
-   if(equivalent(value,task)){
+   const task=(session.questions||getLesson(session.id).questions)[session.index];
+   session.draft=value;
+   const validation=ENGINE.check(value,task);
+   if(validation.correct){
     if(session.tries===0)session.score++;
     session.answered=true;result={correct:true,title:"Richtig!",body:task.solution};
    }else{
     session.tries++;
-    result={correct:false,title:"Fast – probier es nochmal.",body:session.tries===1?task.hint:"Noch ein Tipp: "+task.hint+" Du kannst auch die Lösung anzeigen lassen."};
+    result={correct:false,title:"Noch nicht ganz – versuch es erneut.",body:validation.reason||task.hint};
    }
    render();
    if(!session.answered)document.querySelector("#answer")?.focus();
