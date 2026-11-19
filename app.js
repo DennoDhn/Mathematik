@@ -108,7 +108,7 @@
  }
  function startPractice(id){
   const l=getLesson(id);if(!l)return;
-  session={id,index:0,score:0,tries:0,answered:false,revealed:false,draft:"",questions:ENGINE.createSet(l,Date.now()+Math.floor(Math.random()*1000000))};
+  session={id,index:0,score:0,tries:0,hints:0,answered:false,revealed:false,draft:"",questions:ENGINE.createSet(l,Date.now()+Math.floor(Math.random()*1000000))};
   result=null;screen={view:"practice",id};saveSession();render();
  }
  function practice(){
@@ -197,9 +197,14 @@
   if(type==="set-theme"){state.settings.theme=action.dataset.id==="light"?"light":"dark";save();render();return;}
   if(type==="toggle-short"){state.settings.short=!state.settings.short;save();render();return;}
   if(type==="print"){window.print();return;}
-  if(type==="hint"){const t=(session.questions||getLesson(session.id).questions)[session.index];result={correct:false,title:"Ein kleiner Tipp",body:t.hint};render();return;}
+  if(type==="hint"){
+   const l=getLesson(session.id),t=(session.questions||l.questions)[session.index];
+   session.hints=(session.hints||0)+1;
+   result={correct:false,title:session.hints===1?"Ein kleiner Tipp":"Zusätzliche Hilfe",body:session.hints===1?t.hint:session.hints===2?l.rule:t.solution};
+   saveSession();render();return;
+  }
   if(type==="reveal"){const t=(session.questions||getLesson(session.id).questions)[session.index];session.answered=true;result={correct:false,title:"So geht die Lösung: "+t.answer,body:t.solution};saveSession();render();return;}
-  if(type==="next"){session.index++;session.answered=false;session.tries=0;session.draft="";result=null;saveSession();render();document.querySelector("#answer")?.focus();return;}
+  if(type==="next"){session.index++;session.answered=false;session.tries=0;session.hints=0;session.draft="";result=null;saveSession();render();document.querySelector("#answer")?.focus();return;}
   if(type==="export"){
    const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="mathe-hero-lernstand.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);notify("Sicherung wurde erstellt.");return;
   }
@@ -242,7 +247,7 @@
     session.answered=true;result={correct:true,title:"Richtig!",body:task.solution};
    }else{
     session.tries++;
-    result={correct:false,title:"Noch nicht ganz – versuch es erneut.",body:validation.reason||task.hint};
+    result={correct:false,title:"Noch nicht ganz – versuch es erneut.",body:validation.reason||ENGINE.diagnose(value,task)||task.hint};
    }
    saveSession();render();
    if(!session.answered){const field=document.querySelector("#answer");field?.focus();field?.select?.();}
