@@ -25,7 +25,7 @@ Jede der **56 Lektionen** besitzt jetzt einen eigenen Unterricht mit vier aufein
 
 1. **Was ist das?** Fachbegriffe und Alltagsnutzen verstehen.
 2. **Warum funktioniert das?** Rechenidee, ausführliche Erklärung, vorgerechnetes Lehrerbeispiel und gegebenenfalls interaktives Lernlabor.
-3. **Gemeinsam rechnen:** Drei Aufgaben schrittweise lösen – erst nachdenken, dann einen Hinweis aufdecken, danach die Lösung betrachten. Ohne Noten und Zeitdruck.
+3. **Gemeinsam rechnen:** Drei Aufgaben schrittweise lösen – zuerst eine eigene Antwort versuchen und unverbindlich prüfen, danach einen Hinweis und schließlich die Lösung aufdecken. Ohne Noten und Zeitdruck.
 4. **Danach selbst üben:** Kompakter Lernzettel und eigenständige Aufgaben. Der Unterricht ist jederzeit wiederholbar.
 
 Zusätzlich beginnen alle neun Lernwelten mit einer ausführlichen Einführung und Lernübersicht. Alle Theorieinhalte liegen im unabhängigen, offlinefähigen Modul `tutorials.js`. Abgeschlossene Unterrichtsteile werden pro Schülerprofil lokal gespeichert; der bisherige Fortschritt und die bestehenden Übungen bleiben erhalten.
