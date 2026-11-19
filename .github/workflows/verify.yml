@@ -18,5 +18,11 @@ jobs:
           node --check app.js
           node --check lessons.js
           node --check sw.js
+          node --check math-engine.js
+          node --check curriculum.js
+          node --check additional-lessons.js
+          node --check visuals.js
       - name: Lesson data and offline assets
-        run: node tests/smoke.cjs
+        run: |
+          node tests/smoke.cjs
+          node tests/validation.cjs
