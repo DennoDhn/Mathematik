@@ -11,7 +11,7 @@
  const formatMath=text=>escapeHTML(text).replace(/(\d+)\/([1-9]\d*)/g,(all,top,bottom)=>
   '<span class="math-frac" role="img" aria-label="Bruch '+top+' durch '+bottom+'"><span>'+top+'</span><span>'+bottom+'</span></span>');
  const go=(view,id)=>{
-  if(view==="classroom"&&(!teaching||teaching.id!==id))teaching={id,phase:0,example:0,reveal:0};
+  if(view==="classroom"&&(!teaching||teaching.id!==id))teaching={id,phase:0,example:0,reveal:0,draft:"",feedback:null};
   if(view==="resume"){
    const saved=pendingPractice();
    if(saved){session=saved;screen={view:"practice",id:saved.id};result=null;render();document.querySelector("#answer")?.focus();}
@@ -155,7 +155,7 @@
  }
  function classroom(id){
   const l=getLesson(id);if(!l)return topics();
-  if(!teaching||teaching.id!==id)teaching={id,phase:0,example:0,reveal:0};
+  if(!teaching||teaching.id!==id)teaching={id,phase:0,example:0,reveal:0,draft:"",feedback:null};
   const t=TUTORIALS.get(l),c=teaching,g=getGroup(l.group);
   const steps=["Was ist das?","Warum und wie?","Gemeinsam rechnen","Selbst üben"];
   const tracker='<div class="class-tracker" role="list" aria-label="Unterrichtsphasen">'+steps.map((x,i)=>'<div role="listitem" class="class-track '+(i===c.phase?'current':i<c.phase?'done':'')+'"><span class="class-track-num">'+(i<c.phase?'✓':i+1)+'</span><span>'+x+'</span></div>').join("")+'</div>';
@@ -180,6 +180,9 @@
     '<p class="lead">Du denkst zuerst selbst nach und kannst dir dann den nächsten Schritt erklären lassen. Ohne Zeitlimit oder Note.</p>'+
     '<div class="guide-count">Gemeinsame Aufgabe '+(c.example+1)+' von '+n+'</div>'+
     '<div class="guide-question">'+formatMath(x.question)+'</div>'+
+    '<form id="guide-answer-form" class="guide-answer-form"><label class="fieldlabel" for="guide-answer">Was meinst du? Probier es selbst.</label>'+
+    '<div class="guide-input-row"><input id="guide-answer" class="field" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="Dein Ergebnis (freiwillig)" value="'+escapeHTML(c.draft||"")+'"><button type="submit" class="btn ghost">Meine Antwort prüfen</button></div></form>'+
+    (c.feedback?'<div class="guide-feedback '+(c.feedback.correct?'right':'try-again')+'" role="status">'+escapeHTML(c.feedback.text)+'</div>':'')+
     '<div class="guide-timeline" aria-live="polite">'+
       (c.reveal>=1?'<div class="guide-step"><span>1</span><div><strong>Dein erster Schritt</strong><p>'+formatMath(x.steps[0])+'</p></div></div>':'<p class="guide-wait">Was würdest du zuerst rechnen? Überlege, bevor du den Tipp aufdeckst.</p>')+
       (c.reveal>=2?'<div class="guide-step"><span>2</span><div><strong>Gemeinsam zur Lösung</strong><p>'+formatMath(x.steps[1])+'</p><p class="guide-answer">Ergebnis: '+formatMath(x.answer)+'</p></div></div>':'')+
@@ -237,7 +240,7 @@
   }
   const success=score>=Math.ceil(n*.75);
   const next=LESSONS[LESSONS.findIndex(x=>x.id===l.id)+1];
-  return '<div class="hero"><div class="eyebrow">Runde abgeschlossen</div><h1>'+(success?'Das hast du geschafft!':'Gut geübt!')+'</h1><p class="lead">Du hast '+score+' von '+n+' Aufgaben beim ersten Versuch ohne Hilfe richtig gelöst.'+(success?' Diese Lektion zählt jetzt als gelernt.':' Du kannst sie nochmal üben – ohne Druck.')+'</p><div class="actions"><button class="btn primary" data-action="start" data-id="'+l.id+'">Nochmal üben</button>'+viewButton("Erklärung nachlesen","lesson",l.id,"ghost")+(next?viewButton("Nächste Lektion","lesson",next.id,"ghost"):'')+'</div></div>';
+  return '<div class="hero"><div class="eyebrow">Runde abgeschlossen</div><h1>'+(success?'Das hast du geschafft!':'Gut geübt!')+'</h1><p class="lead">Du hast '+score+' von '+n+' Aufgaben beim ersten Versuch ohne Hilfe richtig gelöst.'+(success?' Diese Lektion zählt jetzt als gelernt.':' Du kannst sie nochmal üben – ohne Druck.')+'</p><div class="actions"><button class="btn primary" data-action="start" data-id="'+l.id+'">Nochmal üben</button>'+viewButton("Erklärung nachlesen","lesson",l.id,"ghost")+(next?viewButton("Nächste Lektion",state.progress[next.id]?.theoryCompleted?"lesson":"classroom",next.id,"ghost"):'')+'</div></div>';
  }
  function review(){
   const todo=LESSONS.filter(l=>state.progress[l.id]?.attempts&&(!state.progress[l.id].passed||isDue(state.progress[l.id])||state.progress[l.id].secure===false));
@@ -306,16 +309,16 @@
   const action=event.target.closest("[data-action]");if(!action)return;
   const type=action.dataset.action;
   if(type==="start"){startPractice(action.dataset.id);return;}
-   if(type==="teach-forward"&&teaching){teaching.phase=Math.min(2,teaching.phase+1);teaching.example=0;teaching.reveal=0;render();document.querySelector("#content")?.focus();return;}
-   if(type==="teach-back"&&teaching){if(teaching.phase===2&&teaching.example>0){teaching.example--;teaching.reveal=0;}else teaching.phase=Math.max(0,teaching.phase-1);render();document.querySelector("#content")?.focus();return;}
+   if(type==="teach-forward"&&teaching){teaching.phase=Math.min(2,teaching.phase+1);teaching.example=0;teaching.reveal=0;teaching.draft="";teaching.feedback=null;render();document.querySelector("#content")?.focus();return;}
+   if(type==="teach-back"&&teaching){if(teaching.phase===2&&teaching.example>0){teaching.example--;teaching.reveal=0;teaching.draft="";teaching.feedback=null;}else teaching.phase=Math.max(0,teaching.phase-1);render();document.querySelector("#content")?.focus();return;}
    if(type==="teach-reveal"&&teaching){teaching.reveal=Math.min(2,teaching.reveal+1);render();return;}
    if(type==="teach-next-example"&&teaching&&teaching.phase===2){
     if(teaching.reveal<2)return;
-    if(teaching.example+1<TUTORIALS.get(getLesson(teaching.id)).practice.length){teaching.example++;teaching.reveal=0;}
+    if(teaching.example+1<TUTORIALS.get(getLesson(teaching.id)).practice.length){teaching.example++;teaching.reveal=0;teaching.draft="";teaching.feedback=null;}
     else{teaching.phase=3;state.progress[teaching.id]={...(state.progress[teaching.id]||{}),theoryCompleted:true};save();}
     render();document.querySelector("#content")?.focus();return;
    }
-   if(type==="teach-restart"&&teaching){teaching.phase=0;teaching.example=0;teaching.reveal=0;render();document.querySelector("#content")?.focus();return;}
+   if(type==="teach-restart"&&teaching){teaching.phase=0;teaching.example=0;teaching.reveal=0;teaching.draft="";teaching.feedback=null;render();document.querySelector("#content")?.focus();return;}
   if(type==="switch-profile"){switchProfile(action.dataset.id);return;}
   if(type==="set-theme"){state.settings.theme=action.dataset.id==="light"?"light":"dark";save();render();return;}
   if(type==="set-duration"){state.settings.duration=[5,10,15].includes(Number(action.dataset.id))?Number(action.dataset.id):10;save();render();return;}
@@ -344,6 +347,21 @@
   }
  });
  document.addEventListener("submit",event=>{
+  if(event.target.id==="guide-answer-form"){
+   event.preventDefault();
+   if(!teaching||teaching.phase!==2)return;
+   const answer=String(document.querySelector("#guide-answer")?.value||"").trim();
+   teaching.draft=answer;
+   if(!answer)teaching.feedback={correct:false,text:"Trage zuerst einen Vorschlag ein. Du kannst stattdessen auch den nächsten Tipp aufdecken."};
+   else{
+    const task=TUTORIALS.get(getLesson(teaching.id)).practice[teaching.example];
+    const checked=ENGINE.check(answer,{question:task.question,answer:task.answer});
+    teaching.feedback=checked.correct?
+      {correct:true,text:"Sehr gut! Schau dir danach trotzdem den Lösungsweg an."}:
+      {correct:false,text:checked.reason||"Noch nicht ganz. Der nächste Tipp zeigt dir, wie du anfangen kannst."};
+   }
+   render();document.querySelector("#guide-answer")?.focus();return;
+  }
   if(event.target.id==="welcome-form"){
    event.preventDefault();const f=new FormData(event.target),name=String(f.get("name")||"").trim();
    if(!name)return;
@@ -385,6 +403,7 @@
   }
  });
  document.addEventListener("input",event=>{
+   if(event.target?.id==="guide-answer"&&teaching){teaching.draft=event.target.value;}
    if(event.target?.id==="answer"&&session){session.draft=event.target.value;saveSession();}
  });
  document.addEventListener("change",async event=>{
