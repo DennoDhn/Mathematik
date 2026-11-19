@@ -26,3 +26,4 @@ jobs:
         run: |
           node tests/smoke.cjs
           node tests/validation.cjs
+          node tests/app-flows.cjs
