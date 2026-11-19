@@ -1,0 +1,22 @@
+name: Verify static learning app
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax
+        run: |
+          node --check app.js
+          node --check lessons.js
+          node --check sw.js
+      - name: Lesson data and offline assets
+        run: node tests/smoke.cjs
