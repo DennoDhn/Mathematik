@@ -8,7 +8,7 @@
  const saveSession=()=>{try{if(session)localStorage.setItem(SESSION_KEY,JSON.stringify({profileId:state.activeProfileId,session}));}catch{}};
  const root = document.querySelector("#app");
  const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
- const go=(view,id)=>{screen={view,id};result=null;session=null;clearSession();window.scrollTo({top:0,behavior:"instant"});render();};
+ const go=(view,id)=>{screen={view,id};result=null;session=null;clearSession();window.scrollTo({top:0,behavior:"auto"});render();document.querySelector("#content")?.focus();};
  const read=()=>{
   try{
    const s=JSON.parse(localStorage.getItem(KEY)||"null");
@@ -143,14 +143,20 @@
   const done=passed(),total=LESSONS.length;
   return '<div class="eyebrow">Lernstand auf diesem Gerät</div><h1>Mein Fortschritt</h1><div class="stats"><div class="stat"><strong>'+done+'</strong><span>Gelernt</span></div><div class="stat"><strong>'+attemptsCount()+'</strong><span>Runden</span></div><div class="stat"><strong>'+pct(done,total)+' %</strong><span>Fortschritt</span></div></div>'+progressBar(done,total)+'<h2 class="section">Deine Lernwelten</h2>'+GROUPS.map(g=>{const ls=groupLessons(g.id),n=ls.filter(l=>state.progress[l.id]?.passed).length;return '<section class="lesson-box"><div class="kicker"><strong>'+escapeHTML(g.title)+'</strong><span>'+n+' / '+ls.length+'</span></div>'+progressBar(n,ls.length)+'</section>';}).join("")+'<p class="note">Dies ist eine Orientierung, keine Schulnote. „Gelernt“ bedeutet, dass mindestens 75 % der Fragen in einer Übungsrunde beim ersten Versuch richtig beantwortet wurden.</p>';
  }
+ function themeControls(){
+  const current=state.settings.theme==="light"?"light":"dark";
+  return '<section class="lesson-box"><h2>Darstellung</h2><p>Wähle das Design, das für dich am angenehmsten lesbar ist.</p><div class="chipset">'+
+    ["dark","light"].map(id=>'<button type="button" class="chip '+(current===id?'selected':'')+'" aria-pressed="'+(current===id)+'" data-action="set-theme" data-id="'+id+'">'+(id==="dark"?"Midnight":"Paperlight")+'</button>').join("")+'</div></section>';
+ }
  function profilesSection(){
   const buttons=Object.entries(state.profiles).map(([id,p])=>'<button type="button" class="chip '+(id===state.activeProfileId?'selected':'')+'" data-action="switch-profile" data-id="'+escapeHTML(id)+'">'+escapeHTML(p.profile?.name||"Profil")+'</button>').join("");
   return '<section class="lesson-box"><h2>Profile auf diesem Gerät</h2><p>Geschwister können hier eigene Lernstände anlegen.</p><div class="chipset">'+buttons+'</div><form id="new-profile-form"><div class="formrow"><div><label class="fieldlabel" for="new-name">Neues Profil</label><input id="new-name" name="name" maxlength="40" required class="field" placeholder="Name oder Spitzname"></div><div><label for="new-grade" class="fieldlabel">Klasse</label><select id="new-grade" name="grade" class="field">'+[5,6,7,8].map(n=>'<option value="'+n+'">'+n+'. Klasse</option>').join("")+'</select></div></div><button type="submit" class="btn">Profil hinzufügen</button></form></section>';
  }
  function settings(){
-  return '<div class="eyebrow">Deine App</div><h1>Einstellungen</h1><section class="lesson-box"><h2>Schülerprofil</h2><form id="settings-form"><div class="formrow"><div><label class="fieldlabel" for="settings-name">Name / Spitzname</label><input class="field" id="settings-name" name="name" maxlength="40" required value="'+escapeHTML(state.profile.name)+'"></div><div><label class="fieldlabel" for="settings-grade">Klasse</label><select class="field" id="settings-grade" name="grade">'+[5,6,7,8].map(n=>'<option value="'+n+'"'+(String(n)===String(state.profile.grade)?' selected':'')+'>'+n+'. Klasse</option>').join("")+'</select></div></div><label class="check"><input name="short" type="checkbox"'+(state.settings.short?' checked':'')+'> Kurze Erklärungen bevorzugen</label><div class="actions"><button class="btn primary" type="submit">Speichern</button></div></form></section>'+profilesSection()+'<section class="lesson-box"><h2>Lernstand sichern</h2><p>Dein Fortschritt wird lokal auf diesem Gerät gespeichert. Sichere ihn als Datei, wenn du den Browser wechselst oder Daten löschst.</p><div class="actions"><button class="btn" data-action="export">Sicherung herunterladen</button><label class="btn" for="import-file">Sicherung importieren</label><input id="import-file" type="file" accept="application/json,.json" class="sr-only"></div></section><section class="lesson-box warning"><h2>Daten löschen</h2><p>Alle lokalen Lernstände und das Profil auf diesem Gerät zurücksetzen.</p><button class="btn ghost" data-action="reset">Alle Daten löschen</button></section><p id="message" role="status" aria-live="polite"></p>';
+  return '<div class="eyebrow">Deine App</div><h1>Einstellungen</h1><section class="lesson-box"><h2>Schülerprofil</h2><form id="settings-form"><div class="formrow"><div><label class="fieldlabel" for="settings-name">Name / Spitzname</label><input class="field" id="settings-name" name="name" maxlength="40" required value="'+escapeHTML(state.profile.name)+'"></div><div><label class="fieldlabel" for="settings-grade">Klasse</label><select class="field" id="settings-grade" name="grade">'+[5,6,7,8].map(n=>'<option value="'+n+'"'+(String(n)===String(state.profile.grade)?' selected':'')+'>'+n+'. Klasse</option>').join("")+'</select></div></div><label class="check"><input name="short" type="checkbox"'+(state.settings.short?' checked':'')+'> Kurze Erklärungen bevorzugen</label><div class="actions"><button class="btn primary" type="submit">Speichern</button></div></form></section>'+profilesSection()+themeControls()+'<section class="lesson-box"><h2>Lernstand sichern</h2><p>Dein Fortschritt wird lokal auf diesem Gerät gespeichert. Sichere ihn als Datei, wenn du den Browser wechselst oder Daten löschst.</p><div class="actions"><button class="btn" data-action="export">Sicherung herunterladen</button><label class="btn" for="import-file">Sicherung importieren</label><input id="import-file" type="file" accept="application/json,.json" class="sr-only"></div></section><section class="lesson-box warning"><h2>Daten löschen</h2><p>Alle lokalen Lernstände und das Profil auf diesem Gerät zurücksetzen.</p><button class="btn ghost" data-action="reset">Alle Daten löschen</button></section><p id="message" role="status" aria-live="polite"></p>';
  }
  function render(){
+  document.documentElement.dataset.theme=state.settings.theme==="light"?"light":"dark";
   if(!state.profile){renderOnboard();return;}
   let content;
   switch(screen.view){
@@ -186,6 +192,7 @@
   const type=action.dataset.action;
   if(type==="start"){startPractice(action.dataset.id);return;}
   if(type==="switch-profile"){switchProfile(action.dataset.id);return;}
+  if(type==="set-theme"){state.settings.theme=action.dataset.id==="light"?"light":"dark";save();render();return;}
   if(type==="toggle-short"){state.settings.short=!state.settings.short;save();render();return;}
   if(type==="print"){window.print();return;}
   if(type==="hint"){const t=(session.questions||getLesson(session.id).questions)[session.index];result={correct:false,title:"Ein kleiner Tipp",body:t.hint};render();return;}
