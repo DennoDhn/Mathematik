@@ -1,45 +1,57 @@
 "use strict";
 (() => {
  const {GROUPS,LESSONS} = window.MATHE_DATA || {GROUPS:[],LESSONS:[]};
+ const ENGINE=window.MATHE_ENGINE,CURRICULUM=window.MATHE_CURRICULUM,VISUALS=window.MATHE_VISUALS;
+ if(!ENGINE||!CURRICULUM||!VISUALS)throw Error("Ein Lernmodul konnte nicht geladen werden.");
  const KEY = "mathe-hero-progress-v1";
  const root = document.querySelector("#app");
  const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const go = (view,id) => { screen={view,id}; result=null; session=null; window.scrollTo({top:0,behavior:"instant"}); render(); };
- const read = () => {try{const s=JSON.parse(localStorage.getItem(KEY)||"null");return s&&typeof s==="object"&&s.version===1?s:null;}catch{return null;}};
- const state = read() || {version:1,profile:null,progress:{},settings:{short:false}};
+ const read=()=>{
+  try{
+   const s=JSON.parse(localStorage.getItem(KEY)||"null");
+   if(!s||typeof s!=="object")return null;
+   if(s.version===2&&s.profiles&&typeof s.profiles==="object"){
+     const item=s.profiles[s.activeProfileId];
+     if(item){s.profile=item.profile;s.progress=item.progress||{};s.settings=item.settings||{short:false};}
+     else{s.profile=null;s.progress={};s.settings={short:false};}
+     return s;
+   }
+   if(s.version===1){
+     const id="profile-1";
+     return {version:2,activeProfileId:s.profile?id:null,profiles:s.profile?{[id]:{profile:s.profile,progress:s.progress||{},settings:s.settings||{short:false}}}:{},profile:s.profile||null,progress:s.progress||{},settings:s.settings||{short:false}};
+   }
+   return null;
+  }catch{return null;}
+ };
+ const state=read()||{version:2,activeProfileId:null,profiles:{},profile:null,progress:{},settings:{short:false}};
  let screen={view:"home",id:null},session=null,result=null,deferredInstall=null;
- const save = () => {try{localStorage.setItem(KEY,JSON.stringify(state));return true;}catch{return false;}};
+ const save=()=>{
+  try{
+   if(state.profile&&state.activeProfileId)state.profiles[state.activeProfileId]={profile:state.profile,progress:state.progress,settings:state.settings};
+   localStorage.setItem(KEY,JSON.stringify(state));return true;
+  }catch{return false;}
+ };
+ const switchProfile=id=>{
+   const p=state.profiles[id];if(!p)return;
+   state.activeProfileId=id;state.profile=p.profile;state.progress=p.progress||{};state.settings=p.settings||{short:false};
+   save();go("home");
+ };
+ const isDue=p=>Boolean(p?.nextReview&&Date.parse(p.nextReview)<=Date.now());
+ const prerequisiteMissing=l=>CURRICULUM.metadata(l).prerequisites.filter(id=>!state.progress[id]?.passed);
+ const recommended=()=>{
+   const due=LESSONS.find(l=>isDue(state.progress[l.id]));if(due)return due;
+   const grade=Number(state.profile?.grade||6),available=LESSONS.filter(l=>!state.progress[l.id]?.passed);
+   return available.find(l=>CURRICULUM.metadata(l).grade<=grade&&prerequisiteMissing(l).length===0)
+     || available.find(l=>CURRICULUM.metadata(l).grade<=grade)||available[0]||LESSONS[0];
+ };
  const getLesson = id => LESSONS.find(l=>l.id===id);
  const getGroup = id => GROUPS.find(g=>g.id===id);
- const getStatus = id => {const p=state.progress[id];return p?.passed?"Gelernt":p?"Weiter üben":"Noch offen";};
+ const getStatus = id => {const p=state.progress[id];return isDue(p)?"Wiederholen":p?.passed?"Gelernt":p?"Weiter üben":"Noch offen";};
  const passed = () => LESSONS.filter(l=>state.progress[l.id]?.passed).length;
  const attemptsCount = () => Object.values(state.progress).reduce((s,p)=>s+(p.attempts||0),0);
  const pct = (n,d) => d?Math.round(n/d*100):0;
- const sanitizeNumber = s => String(s??"").trim().toLowerCase().replace(/[\u2212\u2013\u2014]/g,"-").replace(/\s/g,"").replace(/[.,]/g,".");
- const parseRational = text => {
-   const t=sanitizeNumber(text).replace(/%$/,"");
-   const parts=t.split("/");
-   if(parts.length>2 || !parts.every(p=>/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(p)))return null;
-   const num=Number(parts[0]),den=parts.length===2?Number(parts[1]):1;
-   if(!Number.isFinite(num)||!Number.isFinite(den)||den===0)return null;
-   return (num/den)*(sanitizeNumber(text).endsWith("%")?.01:1);
- };
- const equivalent = (value,task) => {
-   const a=sanitizeNumber(value),b=sanitizeNumber(task.answer);
-   if(!a)return false;
-   if(task.mode==="value"){
-     const x=parseRational(a),y=parseRational(b);
-     return x!==null&&y!==null&&Math.abs(x-y)<1e-9;
-   }
-   const x=parseRational(a),y=parseRational(b);
-   if(!/[x%=]/i.test(b)&&!/[x%=]/i.test(a)&&x!==null&&y!==null){
-     /* Exact form is required for fractions; equivalent decimal formatting is allowed. */
-     if(b.includes("/"))return a===b;
-     if(a.includes("/"))return false;
-     return Math.abs(x-y)<1e-9;
-   }
-   return a===b;
- };
+ const equivalent=(value,task)=>ENGINE.check(value,task).correct;
  const viewButton = (text,view,id="",cls="")=>'<button type="button" class="btn '+cls+'" data-go="'+escapeHTML(view)+'" data-id="'+escapeHTML(id)+'">'+escapeHTML(text)+'</button>';
  const navButton = (text,view)=>'<button class="navbutton'+(screen.view===view?' active':'')+'" data-go="'+view+'" type="button">'+text+'</button>';
  const progressBar = (value,total)=>'<div class="bar barsmall" role="progressbar" aria-label="Fortschritt" aria-valuenow="'+value+'" aria-valuemin="0" aria-valuemax="'+total+'"><span style="width:'+pct(value,total)+'%"></span></div>';
@@ -56,7 +68,7 @@
   root.innerHTML='<div class="app"><header class="top"><div class="brand"><span class="mark">M</span><span>MATHE HERO</span></div><span class="pill">Kostenlos & werbefrei</span></header><main class="onboard"><div class="hero"><div class="eyebrow">Dein Start</div><h1>Mathe kann einfach sein.</h1><p class="lead">Hier lernst du in deinem Tempo. Wir erklären alles Schritt für Schritt und helfen, wenn etwas nicht klappt.</p><form id="welcome-form"><div class="formrow"><div><label for="p-name" class="fieldlabel">Wie sollen wir dich nennen?</label><input id="p-name" class="field" name="name" maxlength="40" placeholder="Dein Vorname oder Spitzname" required autocomplete="nickname"></div><div><label for="p-grade" class="fieldlabel">Welche Klasse?</label><select id="p-grade" name="grade" class="field"><option value="5">5. Klasse</option><option value="6" selected>6. Klasse</option><option value="7">7. Klasse</option><option value="8">8. Klasse</option></select></div></div><label class="check"><input type="checkbox" name="short"> Bitte kurze Erklärungen bevorzugen (jederzeit änderbar)</label><div class="actions"><button type="submit" class="btn primary">Los geht’s</button></div></form><p class="note" style="margin-top:20px">Dein Name und Fortschritt werden nur lokal im Browser gespeichert. Eine Anmeldung ist nicht nötig.</p></div></main></div>';
  }
  function home() {
-  const next=LESSONS.find(l=>!state.progress[l.id]?.passed)||LESSONS[0];
+  const next=recommended();
   return '<div class="hero"><div class="eyebrow">Dein Lernplatz</div><h1>Hallo, '+escapeHTML(state.profile.name)+'!</h1><p class="lead">Wir machen Mathe Schritt für Schritt. Nimm dir ein Thema vor, lies die Erklärung und probiere dann ein paar Aufgaben.</p><div class="actions">'+viewButton("Weiterlernen: "+next.title,"lesson",next.id,"primary")+viewButton("Alle Themen ansehen","topics","","ghost")+'</div></div><h2 class="section">Dein Fortschritt</h2><div class="stats"><div class="stat"><strong>'+passed()+'</strong><span>Gelernte Lektionen</span></div><div class="stat"><strong>'+LESSONS.length+'</strong><span>Lektionen insgesamt</span></div><div class="stat"><strong>'+attemptsCount()+'</strong><span>Übungsrunden</span></div></div>'+progressBar(passed(),LESSONS.length)+'<h2 class="section">Lernwelten</h2>'+renderGroupGrid()+'<p class="note section">Tipp: Fang bei „Brüche verstehen“ an, wenn du Kürzen und Erweitern lernen möchtest.</p>';
  }
  function renderGroupGrid(){
@@ -69,7 +81,7 @@
  function topic(id){
   const group=getGroup(id);if(!group)return topics();
   const lessons=groupLessons(group.id);
-  return crumb(group)+'<div class="eyebrow">Lernwelt '+group.emoji+'</div><h1>'+escapeHTML(group.title)+'</h1><p class="lead">'+escapeHTML(group.desc)+'</p><div class="lesson-list">'+lessons.map((l,i)=>'<button type="button" class="lesson-link" data-go="lesson" data-id="'+l.id+'"><span><strong>'+(i+1)+'. '+escapeHTML(l.title)+'</strong><small>'+escapeHTML(l.brief)+'</small></span><span class="right">'+getStatus(l.id)+' →</span></button>').join("")+'</div>';
+  return crumb(group)+'<div class="eyebrow">Lernwelt '+group.emoji+'</div><h1>'+escapeHTML(group.title)+'</h1><p class="lead">'+escapeHTML(group.desc)+'</p><div class="lesson-list">'+lessons.map((l,i)=>'<button type="button" class="lesson-link" data-go="lesson" data-id="'+l.id+'"><span><strong>'+(i+1)+'. '+escapeHTML(l.title)+'</strong><small>'+escapeHTML(l.brief)+'</small></span><span class="right">Kl. '+CURRICULUM.metadata(l).grade+' · '+getStatus(l.id)+' →</span></button>').join("")+'</div>';
  }
  function lesson(id) {
   const l=getLesson(id);if(!l)return topics();
@@ -77,6 +89,7 @@
   let html=crumb(g,l)+'<div class="eyebrow">Lektion · '+escapeHTML(g.title)+'</div><h1>'+escapeHTML(l.title)+'</h1><p class="lead">'+escapeHTML(l.brief)+'</p><div class="chipset"><span class="tag">'+getStatus(l.id)+'</span><button type="button" class="chip '+(short?'selected':'')+'" data-action="toggle-short" aria-pressed="'+short+'">Kurze Erklärung '+(short?'an':'aus')+'</button></div>';
   if(!short) html+='<section class="lesson-box"><h2>Wozu brauche ich das?</h2><p>'+escapeHTML(l.why)+'</p></section>';
   html+='<section class="lesson-box"><h2>So geht’s – Schritt für Schritt</h2><ol>'+l.steps.map(s=>'<li>'+escapeHTML(s)+'</li>').join("")+'</ol></section>';
+  html+=VISUALS.markup(l);
   html+='<section class="lesson-box"><h2>Beispiel</h2><div class="example"><strong>'+escapeHTML(l.example)+'</strong><small>'+escapeHTML(l.explain)+'</small></div></section>';
   html+='<section class="lesson-box rule"><h2>Merksatz</h2><p>'+escapeHTML(l.rule)+'</p></section>';
   if(!short)html+='<section class="lesson-box warning"><h2>Pass auf!</h2><p>'+escapeHTML(l.trap)+'</p></section>';
@@ -133,6 +146,7 @@
    default:content=home();
   }
   frame(content);
+  VISUALS.hydrate(document);
  }
  const notify=(message)=>{const n=document.querySelector("#message");if(n)n.textContent=message;};
  function installState(){
@@ -141,7 +155,11 @@
  }
  window.addEventListener("beforeinstallprompt",event=>{event.preventDefault();deferredInstall=event;installState();});
  window.addEventListener("appinstalled",()=>{deferredInstall=null;installState();});
- window.addEventListener("online",render);window.addEventListener("offline",render);
+ const updateConnection=()=>{
+   const el=document.querySelector("#connection");
+   if(el){el.textContent=navigator.onLine?"Online":"Offline";el.className="pill "+(navigator.onLine?"online":"offline");}
+ };
+ window.addEventListener("online",updateConnection);window.addEventListener("offline",updateConnection);
  document.addEventListener("click",async event=>{
   const install=event.target.closest("#install");if(install&&deferredInstall){deferredInstall.prompt();deferredInstall=null;return;}
   const home=event.target.closest("[data-home]");if(home){event.preventDefault();go("home");return;}
