@@ -1,6 +1,6 @@
 /* MATHE HERO: GitHub-Pages-safe application shell, network-first on reconnection.
    Built-in URLs are relative to the Service Worker scope, so project subpaths work. */
-const CACHE = "mathe-hero-offline-v6";
+const CACHE = "mathe-hero-offline-v7";
 const ASSETS = [
  "./","./index.html","./styles.css",
  "./lessons.js","./math-engine.js","./curriculum.js","./additional-lessons.js",
