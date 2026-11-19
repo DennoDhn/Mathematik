@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "MATHE HERO – Mathe verstehen",
+  "short_name": "MATHE HERO",
+  "description": "Kostenlos Mathe lernen: Theorie, Erklärungen und Übungen für Klasse 6 und 7 – offline.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a1020",
+  "theme_color": "#0a1020",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ]
+}
