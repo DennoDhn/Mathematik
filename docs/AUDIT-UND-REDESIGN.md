@@ -1,3 +1,46 @@
+# AKTUALISIERTER UMSETZUNGSSTAND – MATHE HERO 0.5
+
+**Stand:** 19. November 2026. Die ursprüngliche Fehler- und Redesign-Planung folgt weiter unten als historische Prioritätenliste. Diese Statusübersicht beruht auf den tatsächlich in \`main\` geschriebenen Dateien.
+
+## Umgesetzt und im Quellcode geprüft
+
+- **A01:** Korrekte Bewertung gleichwertiger Brüche per exakter rationaler Arithmetik; bei ausdrücklich gefordertem Kürzen/Erweitern besondere Schreibform beachten.
+- **A02–A03:** Kein kompletter Übungs-Neuaufbau bei Verbindungswechsel; Antwortentwurf bleibt nach Hinweisen/Fehlern erhalten. Angefangene Aufgaben werden auch nach Neuladen wiederhergestellt.
+- **A04:** Klassenstufen und Lernvoraussetzungen als Metadaten; Lernempfehlungen berücksichtigen die Klasse (alle Grundlagen bleiben freiwillig aufrufbar).
+- **A05–A06:** Sicherheit/Reviewtermin getrennt von historischen Erfolgen; Empfehlungen berücksichtigen offene Voraussetzungen und fällige Wiederholungen.
+- **B01:** Kontrollierte, reproduzierbare Aufgabenvarianten für zahlreiche Rechenlektionen, mit 3/6/9 Aufgaben je nach gewählter Rundengröße; manche Text-/Theorielektionen bleiben bei drei festen Fragen.
+- **B02:** Sechs funktionsfähige SVG-Labore (Brüche, Dezimalzahlen, Zahlenstrahl, Prozente, Geometrie und Gleichungswaage). Noch keine vollständige Drag-and-drop-/Geodreieck-Suite.
+- **B03–B04:** Fehlerhinweise bei einigen typischen Vorzeichen-, Dezimal- und Bruchfehlern sowie drei Hilfestufen, alternative einfache Erklärung und 5-/10-/15-Minuten-Modi **ohne tatsächliches Zeitlimit**.
+- **B05:** Erweiterung von 30 auf **56 Lektionen** in **neun Themenwelten** mit **170 festen Aufgaben**. Vollständige Schulform- und Länder-Curriculum-Abdeckung ist nicht nachgewiesen.
+- **B06/B11:** Automatische Lösungskonsistenz-/Generatorprüfungen (10.736 Bewertungen im aktuellen Testlauf) und Korrektur einer missverständlichen Kommarechnungs-Erklärung.
+- **B07–B09:** Sitzungswiederherstellung, mehrere lokale Schülerprofile, nächste Wiederholung anhand Lernversuchen und Status.
+- **B10:** Gestapelte Brüche in Beispielen und Übungsfragen; weitere barrierefreie MathML-Formeln später sinnvoll.
+- **B12:** Getrennte Module für Lerninhalt, Erweiterungspaket, Aufgabenengine, Curriculum und interaktive Darstellungen. Noch kein verallgemeinerter Plug-in-Vertrag für fremde Fächer.
+- **Premium-Redesign:** Neues Academy-Designsystem statt Basiskarten; individuelle Lernweltkarten, zwei visuelle Themes, responsive Smartphone-/Tablet-/Desktop-Ansichten, Tastaturfokus und visuelle Lernlabore.
+- **T03:** PNG-Icons in 192/512 px und Apple-Touch-Icon, verbunden mit Manifest/Offline-Cache.
+- **T04:** Netzwerk-vor-Cache bei verfügbarer Verbindung, Offline-Rückfall und Cache-Aktualisierung.
+- **T05 (teilweise):** Node-Tests für Quellen, Unterrichtsdaten, Mathe-Bewertung, Generatoren, Session/Profil/Theme sowie CI-Workflow eingerichtet.
+- **T08 (technische Basis):** Keine Werbung, kein Tracking, kein Backend, keine fremden Laufzeitbibliotheken. Alle Profildaten bleiben lokal.
+
+## Noch offen / nur teilweise umgesetzt
+
+1. **T01–T02: GitHub-Pages-Live-Test, echte iOS-/Android-PWA-Installation und Flugmodus-Test.** Ein externer Live-Seitenaufruf konnte mit den verfügbaren Tools nicht bestätigt werden. Service-Worker-Code und Shell-Inhalte sind geprüft, echte Gerätemessungen nicht.
+2. **T05–T07: Echte Playwright-/WebKit-End-to-End-Tests, automatisierter Accessibility-Audit nach WCAG 2.2 AA, visuelle Regression und Geräte-Screenshots.** Die vorhandenen automatisierten Quellcode-/Simulationstests sind kein Ersatz.
+3. **B01–B03: Weitere echte interaktive Lernspiele, zusätzliche Generatoren und detailliertere Fehleranalysen** für bislang nur statisch abgefragte oder fortgeschrittene Themen.
+4. **B05: Lehrplan-Fachreview** für Schulform/Bundesland einschließlich zusätzlicher Konstruktionen, schwierigeren Sachaufgaben, Statistikauswertung und mehreren vollständig durchgerechneten Beispielen pro Unterthema.
+5. **B12: Vollständiger fachübergreifender Erweiterungsvertrag** für Deutsch/Englisch/weitere Fächer einschließlich alternativer Antworttypen und Aussprache.
+6. **T06: Browser-Quota-/Speicherverlust-Sonderfälle und Backup-Wiederherstellung auf echten Geräten** weiter absichern.
+7. **T04: Atomare Offline-Versionierung** bei unterbrochenen Releases und größeren zukünftigen Content-Paketen vertiefen.
+
+## Testbelege
+
+- \`node tests/smoke.cjs\` – Lektionen und Offline-Dateien geprüft.
+- \`node tests/validation.cjs\` – 56 Lektionen, 170 feste Aufgaben, 10.736 Prüfungen inklusive Generatoren/Bruchäquivalenz.
+- \`node tests/app-flows.cjs\` – Onboarding, gespeicherte Sitzung, Eingabe, Profilwechsel, Theme, Runde.
+- Die Tests bestanden in einer isolierten JavaScript-/Node-kompatiblen Simulation der Repository-Dateien. Ein bestätigter erfolgreicher GitHub-Actions-Lauf oder echter Mobilbrowser-Test liegt nicht vor; die Actions-Prüfung ist eingerichtet.
+
+---
+
 # MATHE HERO – Code-Audit, Fehlerliste und Premium-Redesign
 
 Stand: 19. November 2026  
