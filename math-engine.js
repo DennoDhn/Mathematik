@@ -11,7 +11,16 @@
  }
  function parse(value){
   if(typeof value!=="string"&&typeof value!=="number")return null;
-  const input=String(value).trim().replace(/\u2212/g,"-").replace(/\s/g,"");
+  const raw=String(value).trim().replace(/\u2212/g,"-");
+  const mixed=raw.match(/^([+-]?\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+  if(mixed){
+   try{
+    const whole=BigInt(mixed[1]),num=BigInt(mixed[2]),den=BigInt(mixed[3]);
+    if(den===0n||num>=den)return null;
+    return rational(whole*den+(whole<0n?-num:num),den);
+   }catch{return null;}
+  }
+  const input=raw.replace(/\s/g,"");
   const fraction=input.split("/");
   if(fraction.length>2)return null;
   const parseDecimal=s=>{
@@ -54,9 +63,16 @@
    return {correct:equal(a,b)};
   }
   const a=parse(response),b=parse(answer);
-  if(!a||!b)return {correct:false,reason:"Nutze z. B. 3/4 oder 0,75."};
+  if(!a||!b)return {correct:normalized(response)===normalized(answer),
+    reason:"Nutze die Schreibweise aus der Frage, zum Beispiel 3/4 oder 2 1/3."};
   if(!equal(a,b))return {correct:false};
   if(mode==="decimal"&&response.includes("/"))return {correct:false,reason:"Bitte als Kommazahl schreiben."};
+  const requestedDigits=question.match(/auf (eine|zwei|drei) nachkommastell/);
+  if(requestedDigits){
+   const count={eine:1,zwei:2,drei:3}[requestedDigits[1]];
+   const digits=(response.split(/[.,]/)[1]||"").length;
+   if(digits!==count)return {correct:false,reason:"Schreibe das Ergebnis mit genau "+count+" Nachkommastelle(n)."};
+  }
   if(["fraction","simplified","expanded"].includes(mode)&&!isFraction(response))return {correct:false,reason:"Bitte als Bruch mit / schreiben."};
   if(mode==="simplified"){
    const raw=response.split("/").map(t=>BigInt(t.trim()));
