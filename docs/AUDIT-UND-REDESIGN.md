@@ -43,6 +43,8 @@
 
 # MATHE HERO – Code-Audit, Fehlerliste und Premium-Redesign
 
+> **Historischer Audit-Stand:** Dieses Dokument ist die ursprüngliche Fehler- und Entwicklungsplanung. Viele der hier noch offenen Punkte wurden inzwischen bearbeitet. Den **aktuellen verifizierten Status** mit Tests und weiterhin offenen Geräte-/Designprüfungen findest du in [QA-STATUS-2026-11-19.md](QA-STATUS-2026-11-19.md). Die alten Checkboxen sind keine aktuelle To-do-Wahrheit.
+
 Stand: 19. November 2026  
 Geprüfter Stand: \`main\`, Dateien \`index.html\`, \`app.js\`, \`lessons.js\`, \`styles.css\`, \`sw.js\`, \`manifest.webmanifest\`, README, Smoke-Test und GitHub-Actions-Workflow.
 
