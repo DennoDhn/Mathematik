@@ -313,7 +313,7 @@
    if(validation.correct){
     const independent=session.tries===0&&(session.hints||0)===0;
     if(independent)session.score++;
-    session.answered=true;result={correct:true,title:independent?"Richtig!":"Richtig gelöst – mit Unterstützung",body:task.solution};
+    session.answered=true;result={correct:true,title:independent?"Richtig!":(session.hints>0?"Richtig gelöst – mit Hilfe":"Jetzt stimmt es!"),body:task.solution};
    }else{
     session.tries++;
     result={correct:false,title:"Noch nicht ganz – versuch es erneut.",body:validation.reason||ENGINE.diagnose(value,task)||task.hint};
