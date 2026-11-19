@@ -168,14 +168,12 @@
   }
   return out;
  }
- function createSet(lesson,seed){
-  const fixed=lesson.questions.map(q=>({...q}));
-  const generated=generator(lesson.id,seed,4);
-  if(!generated.length)return fixed;
-  const rnd=random(hash(lesson.id+"-order-"+seed));
-  const selected=[...fixed.slice(0,2),...generated];
+ function createSet(lesson,seed,count=6){
+  const fixed=lesson.questions.map(q=>({...q})),rnd=random(hash(lesson.id+"-order-"+seed));
+  const generated=generator(lesson.id,seed,Math.max(1,count-2));
+  const selected=generated.length?[...fixed.slice(0,2),...generated]:fixed;
   for(let i=selected.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[selected[i],selected[j]]=[selected[j],selected[i]];}
-  return selected;
+  return selected.slice(0,count);
  }
  global.MATHE_ENGINE={parse,rational,gcd,equal,check,diagnose,createSet,generator,hash};
 })(window);
