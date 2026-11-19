@@ -10,7 +10,17 @@
  const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const formatMath=text=>escapeHTML(text).replace(/(\d+)\/([1-9]\d*)/g,(all,top,bottom)=>
   '<span class="math-frac" role="img" aria-label="Bruch '+top+' durch '+bottom+'"><span>'+top+'</span><span>'+bottom+'</span></span>');
- const go=(view,id)=>{screen={view,id};result=null;session=null;clearSession();window.scrollTo({top:0,behavior:"auto"});render();document.querySelector("#content")?.focus();};
+ const go=(view,id)=>{
+  if(view==="resume"){
+   const saved=pendingPractice();
+   if(saved){session=saved;screen={view:"practice",id:saved.id};result=null;render();document.querySelector("#answer")?.focus();}
+   else {screen={view:"home",id:null};result=null;session=null;render();}
+   return;
+  }
+  screen={view,id};result=null;session=null;
+  // Navigation pauses an unfinished round instead of destroying the saved draft.
+  window.scrollTo({top:0,behavior:"auto"});render();document.querySelector("#content")?.focus();
+ };
  const read=()=>{
   try{
    const s=JSON.parse(localStorage.getItem(KEY)||"null");
@@ -29,6 +39,14 @@
   }catch{return null;}
  };
  const state=read()||{version:2,activeProfileId:null,profiles:{},profile:null,progress:{},settings:{short:false}};
+ const pendingPractice=()=>{
+  try{
+   const pending=JSON.parse(localStorage.getItem(SESSION_KEY)||"null"),s=pending?.session;
+   if(pending?.profileId!==state.activeProfileId||!s||s.saved||!Array.isArray(s.questions)||!s.questions.length
+       ||!Number.isInteger(s.index)||s.index<0||s.index>=s.questions.length||!LESSONS.some(l=>l.id===s.id))return null;
+   return s;
+  }catch{return null;}
+ };
  let screen={view:"home",id:null},session=null,result=null,deferredInstall=null;
  try{
   const pending=JSON.parse(localStorage.getItem(SESSION_KEY)||"null");
@@ -50,14 +68,14 @@
  const isDue=p=>Boolean(p?.nextReview&&Date.parse(p.nextReview)<=Date.now());
  const prerequisiteMissing=l=>CURRICULUM.metadata(l).prerequisites.filter(id=>!state.progress[id]?.passed);
  const recommended=()=>{
-   const due=LESSONS.find(l=>isDue(state.progress[l.id]));if(due)return due;
+   const due=LESSONS.find(l=>isDue(state.progress[l.id])||(state.progress[l.id]?.passed&&state.progress[l.id]?.secure===false));if(due)return due;
    const grade=Number(state.profile?.grade||6),available=LESSONS.filter(l=>!state.progress[l.id]?.passed);
    return available.find(l=>CURRICULUM.metadata(l).grade<=grade&&prerequisiteMissing(l).length===0)
      || available.find(l=>CURRICULUM.metadata(l).grade<=grade)||available[0]||LESSONS[0];
  };
  const getLesson = id => LESSONS.find(l=>l.id===id);
  const getGroup = id => GROUPS.find(g=>g.id===id);
- const getStatus = id => {const p=state.progress[id];return isDue(p)?"Wiederholen":p?.passed?"Gelernt":p?"Weiter üben":"Noch offen";};
+ const getStatus = id => {const p=state.progress[id];return isDue(p)||(p?.passed&&p.secure===false)?"Wiederholen":p?.passed?"Gelernt":p?"Weiter üben":"Noch offen";};
  const passed = () => LESSONS.filter(l=>state.progress[l.id]?.passed).length;
  const attemptsCount = () => Object.values(state.progress).reduce((s,p)=>s+(p.attempts||0),0);
  const pct = (n,d) => d?Math.round(n/d*100):0;
@@ -79,14 +97,33 @@
  function renderOnboard(){
   root.innerHTML='<div class="app"><header class="top"><div class="brand"><span class="mark">M</span><span>MATHE HERO</span></div><span class="pill">Kostenlos & werbefrei</span></header><main class="onboard"><div class="hero"><div class="eyebrow">Dein Start</div><h1>Mathe kann einfach sein.</h1><p class="lead">Hier lernst du in deinem Tempo. Wir erklären alles Schritt für Schritt und helfen, wenn etwas nicht klappt.</p><form id="welcome-form"><div class="formrow"><div><label for="p-name" class="fieldlabel">Wie sollen wir dich nennen?</label><input id="p-name" class="field" name="name" maxlength="40" placeholder="Dein Vorname oder Spitzname" required autocomplete="nickname"></div><div><label for="p-grade" class="fieldlabel">Welche Klasse?</label><select id="p-grade" name="grade" class="field"><option value="5">5. Klasse</option><option value="6" selected>6. Klasse</option><option value="7">7. Klasse</option><option value="8">8. Klasse</option></select></div></div><label class="check"><input type="checkbox" name="short"> Bitte kurze Erklärungen bevorzugen (jederzeit änderbar)</label><div class="actions"><button type="submit" class="btn primary">Los geht’s</button></div></form><p class="note" style="margin-top:20px">Dein Name und Fortschritt werden nur lokal im Browser gespeichert. Eine Anmeldung ist nicht nötig.</p></div></main></div>';
  }
+
  function home() {
-  const next=recommended();
-  return '<div class="hero"><div class="eyebrow">Dein Lernplatz</div><h1>Hallo, '+escapeHTML(state.profile.name)+'!</h1><p class="lead">Wir machen Mathe Schritt für Schritt. Nimm dir ein Thema vor, lies die Erklärung und probiere dann ein paar Aufgaben.</p><div class="actions">'+viewButton("Weiterlernen: "+next.title,"lesson",next.id,"primary")+viewButton("Alle Themen ansehen","topics","","ghost")+'</div></div><h2 class="section">Dein Fortschritt</h2><div class="stats"><div class="stat"><strong>'+passed()+'</strong><span>Gelernte Lektionen</span></div><div class="stat"><strong>'+LESSONS.length+'</strong><span>Lektionen insgesamt</span></div><div class="stat"><strong>'+attemptsCount()+'</strong><span>Übungsrunden</span></div></div>'+progressBar(passed(),LESSONS.length)+'<h2 class="section">Lernwelten</h2>'+renderGroupGrid()+'<p class="note section">Tipp: Fang bei „Brüche verstehen“ an, wenn du Kürzen und Erweitern lernen möchtest.</p>';
+  const next=recommended(),pending=pendingPractice();
+  const due=LESSONS.filter(l=>isDue(state.progress[l.id])||(state.progress[l.id]?.passed&&state.progress[l.id]?.secure===false)).length;
+  const primary=pending?viewButton("Letzte Übung fortsetzen","resume","","primary"):viewButton("Meine nächste Mission","lesson",next.id,"primary");
+  return '<div class="hero hero-dashboard"><div class="hero-content"><div class="eyebrow">DEIN MATHE-STUDIO · KLASSE '+escapeHTML(state.profile.grade)+'</div>'+
+   '<h1>Hey, '+escapeHTML(state.profile.name)+'!<span class="hero-highlight">Bereit für den nächsten Schritt?</span></h1>'+
+   '<p class="lead">Wenig lesen. Mehr verstehen. Übe in deinem Tempo und finde heraus, wie Mathe wirklich funktioniert.</p>'+
+   '<div class="hero-spotlight"><span class="hero-spotlight-dot"></span><span>'+(pending?'Deine Übung wartet auf dich':"Empfohlen: "+escapeHTML(next.title))+'</span></div>'+
+   '<div class="actions">'+primary+viewButton("Lernwelten entdecken","topics","","ghost")+'</div></div>'+
+   '<div class="mission-art" aria-hidden="true"><span class="orbit orbit-1"></span><span class="orbit orbit-2"></span><span class="mission-math mission-math-a">½</span><span class="mission-math mission-math-b">×</span><span class="mission-math mission-math-c">%</span><span class="mission-math mission-math-d">3,5</span><div class="mission-core">M<span>+</span></div></div></div>'+
+   '<div class="dashboard-section-head"><div><div class="eyebrow">DEIN FORTSCHRITT</div><h2>Jeder Schritt zählt.</h2></div>'+
+   '<span class="dashboard-micro">'+(due?due+" Thema/Themen wiederholen":"Dein Lerntempo ist genau richtig")+'</span></div>'+
+   '<div class="stats"><div class="stat"><strong>'+passed()+'</strong><span>Lektionen geschafft</span></div><div class="stat"><strong>'+due+'</strong><span>Zum Wiederholen</span></div><div class="stat"><strong>'+attemptsCount()+'</strong><span>Übungsrunden</span></div></div>'+
+   progressBar(passed(),LESSONS.length)+
+   '<div class="dashboard-section-head"><div><div class="eyebrow">WÄHLE DEIN THEMA</div><h2>Deine Lernwelten</h2></div>'+viewButton("Alle Themen","topics","","ghost small")+'</div>'+
+   renderGroupGrid()+'<p class="note section">Neu bei Brüchen? Beginne mit „Brüche verstehen“ und arbeite dich zu Kürzen und Erweitern vor.</p>';
  }
+
  function renderGroupGrid(){
-  return '<div class="grid">'+GROUPS.map(g=>{
+  const worldSymbols={basis:"×",brueche:"½",dezimal:"0,5",rational:"−3",prozent:"%",algebra:"x²",geo:"△",daten:"▥",graph:"ƒ"};
+  return '<div class="grid world-grid">'+GROUPS.map(g=>{
    const lessons=groupLessons(g.id),done=lessons.filter(l=>state.progress[l.id]?.passed).length;
-   return '<button class="card clickable" data-go="topic" data-id="'+g.id+'"><span class="meta">LERNWELT '+g.emoji+'</span><h3>'+escapeHTML(g.title)+'</h3><p>'+escapeHTML(g.desc)+'</p><div class="bottom"><span>'+done+' von '+lessons.length+' gelernt</span><span aria-hidden="true">→</span></div>'+progressBar(done,lessons.length)+'</button>';
+   return '<button class="card clickable world-card" data-world="'+escapeHTML(g.id)+'" data-go="topic" data-id="'+escapeHTML(g.id)+'">'+
+   '<div class="world-top"><span class="meta">LERNWELT '+escapeHTML(g.emoji)+'</span><span class="world-glyph" aria-hidden="true">'+escapeHTML(worldSymbols[g.id]||"∑")+'</span></div>'+
+   '<h3>'+escapeHTML(g.title)+'</h3><p>'+escapeHTML(g.desc)+'</p>'+
+   '<div class="bottom"><span>'+done+' / '+lessons.length+' Lektionen</span><span class="world-enter" aria-hidden="true">↗</span></div>'+progressBar(done,lessons.length)+'</button>';
   }).join("")+'</div>';
  }
  function topics(){return '<div class="eyebrow">Dein Lernplan</div><h1>Alle Mathe-Themen</h1><p class="lead">Wähle, was du gerade in der Schule brauchst. Du kannst jedes Thema jederzeit wiederholen.</p>'+renderGroupGrid();}
@@ -138,8 +175,8 @@
   return '<div class="hero"><div class="eyebrow">Runde abgeschlossen</div><h1>'+(success?'Das hast du geschafft!':'Gut geübt!')+'</h1><p class="lead">Du hast '+score+' von '+n+' Aufgaben beim ersten Versuch richtig gelöst.'+(success?' Diese Lektion zählt jetzt als gelernt.':' Du kannst sie nochmal üben – ohne Druck.')+'</p><div class="actions"><button class="btn primary" data-action="start" data-id="'+l.id+'">Nochmal üben</button>'+viewButton("Erklärung nachlesen","lesson",l.id,"ghost")+(next?viewButton("Nächste Lektion","lesson",next.id,"ghost"):'')+'</div></div>';
  }
  function review(){
-  const todo=LESSONS.filter(l=>state.progress[l.id]&&(!state.progress[l.id].passed||isDue(state.progress[l.id])));
-  const done=LESSONS.filter(l=>state.progress[l.id]?.passed&&!isDue(state.progress[l.id]));
+  const todo=LESSONS.filter(l=>state.progress[l.id]&&(!state.progress[l.id].passed||isDue(state.progress[l.id])||state.progress[l.id].secure===false));
+  const done=LESSONS.filter(l=>state.progress[l.id]?.passed&&!isDue(state.progress[l.id])&&state.progress[l.id].secure!==false);
   const items=[...todo,...done].slice(0,20);
   return '<div class="eyebrow">Nochmal sicher werden</div><h1>Wiederholen</h1><p class="lead">Du kannst alle geübten Themen wiederholen. Wenn du dich unsicher fühlst, lies zuerst den Lernzettel.</p>'+(items.length?'<div class="lesson-list">'+items.map(l=>'<button class="lesson-link" data-go="lesson" data-id="'+l.id+'"><span><strong>'+escapeHTML(l.title)+'</strong><small>'+getStatus(l.id)+'</small></span><span class="right">Üben →</span></button>').join("")+'</div>':'<div class="empty">Noch nichts geübt. Starte deine erste Lektion!<div class="actions" style="justify-content:center;margin-top:12px">'+viewButton("Themen entdecken","topics","","primary")+'</div></div>');
  }
@@ -299,7 +336,7 @@
     state.activeProfileId="imported-1";state.profiles={};
    }else if(data.version===2&&data.profiles&&typeof data.profiles==="object"){
     const entries=Object.entries(data.profiles).slice(0,15).filter(([id,p])=>p?.profile&&p?.progress).map(([id,p],i)=>
-      ["profile-"+i,{profile:sanitizeProfile(p.profile),progress:cleanProgress(p.progress),settings:{short:!!p.settings?.short}}]);
+      ["profile-"+i,{profile:sanitizeProfile(p.profile),progress:cleanProgress(p.progress),settings:{short:!!p.settings?.short,theme:p.settings?.theme==="light"?"light":"dark",duration:[5,10,15].includes(Number(p.settings?.duration))?Number(p.settings.duration):10}}]);
     if(!entries.length)throw Error("Leere Sicherung");
     state.profiles=Object.fromEntries(entries);state.activeProfileId=entries[0][0];
     state.profile=entries[0][1].profile;state.progress=entries[0][1].progress;state.settings=entries[0][1].settings;
