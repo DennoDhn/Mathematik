@@ -47,6 +47,7 @@ a.action("teach-forward");
 assert.match(a.root.innerHTML,/Warum funktioniert die Regel/);
 a.action("teach-forward");
 assert.match(a.root.innerHTML,/Gemeinsame Aufgabe 1 von 3/);
+assert.match(a.root.innerHTML,/guide-answer-form/,"Gemeinsame Aufgabe braucht eine eigene Antwortmöglichkeit");
 for(let n=0;n<3;n++){
  a.action("teach-reveal");
  assert.match(a.root.innerHTML,/Dein erster Schritt/);
