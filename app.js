@@ -143,8 +143,12 @@
   const done=passed(),total=LESSONS.length;
   return '<div class="eyebrow">Lernstand auf diesem Gerät</div><h1>Mein Fortschritt</h1><div class="stats"><div class="stat"><strong>'+done+'</strong><span>Gelernt</span></div><div class="stat"><strong>'+attemptsCount()+'</strong><span>Runden</span></div><div class="stat"><strong>'+pct(done,total)+' %</strong><span>Fortschritt</span></div></div>'+progressBar(done,total)+'<h2 class="section">Deine Lernwelten</h2>'+GROUPS.map(g=>{const ls=groupLessons(g.id),n=ls.filter(l=>state.progress[l.id]?.passed).length;return '<section class="lesson-box"><div class="kicker"><strong>'+escapeHTML(g.title)+'</strong><span>'+n+' / '+ls.length+'</span></div>'+progressBar(n,ls.length)+'</section>';}).join("")+'<p class="note">Dies ist eine Orientierung, keine Schulnote. „Gelernt“ bedeutet, dass mindestens 75 % der Fragen in einer Übungsrunde beim ersten Versuch richtig beantwortet wurden.</p>';
  }
+ function profilesSection(){
+  const buttons=Object.entries(state.profiles).map(([id,p])=>'<button type="button" class="chip '+(id===state.activeProfileId?'selected':'')+'" data-action="switch-profile" data-id="'+escapeHTML(id)+'">'+escapeHTML(p.profile?.name||"Profil")+'</button>').join("");
+  return '<section class="lesson-box"><h2>Profile auf diesem Gerät</h2><p>Geschwister können hier eigene Lernstände anlegen.</p><div class="chipset">'+buttons+'</div><form id="new-profile-form"><div class="formrow"><div><label class="fieldlabel" for="new-name">Neues Profil</label><input id="new-name" name="name" maxlength="40" required class="field" placeholder="Name oder Spitzname"></div><div><label for="new-grade" class="fieldlabel">Klasse</label><select id="new-grade" name="grade" class="field">'+[5,6,7,8].map(n=>'<option value="'+n+'">'+n+'. Klasse</option>').join("")+'</select></div></div><button type="submit" class="btn">Profil hinzufügen</button></form></section>';
+ }
  function settings(){
-  return '<div class="eyebrow">Deine App</div><h1>Einstellungen</h1><section class="lesson-box"><h2>Schülerprofil</h2><form id="settings-form"><div class="formrow"><div><label class="fieldlabel" for="settings-name">Name / Spitzname</label><input class="field" id="settings-name" name="name" maxlength="40" required value="'+escapeHTML(state.profile.name)+'"></div><div><label class="fieldlabel" for="settings-grade">Klasse</label><select class="field" id="settings-grade" name="grade">'+[5,6,7,8].map(n=>'<option value="'+n+'"'+(String(n)===String(state.profile.grade)?' selected':'')+'>'+n+'. Klasse</option>').join("")+'</select></div></div><label class="check"><input name="short" type="checkbox"'+(state.settings.short?' checked':'')+'> Kurze Erklärungen bevorzugen</label><div class="actions"><button class="btn primary" type="submit">Speichern</button></div></form></section><section class="lesson-box"><h2>Lernstand sichern</h2><p>Dein Fortschritt wird lokal auf diesem Gerät gespeichert. Sichere ihn als Datei, wenn du den Browser wechselst oder Daten löschst.</p><div class="actions"><button class="btn" data-action="export">Sicherung herunterladen</button><label class="btn" for="import-file">Sicherung importieren</label><input id="import-file" type="file" accept="application/json,.json" class="sr-only"></div></section><section class="lesson-box warning"><h2>Daten löschen</h2><p>Alle lokalen Lernstände und das Profil auf diesem Gerät zurücksetzen.</p><button class="btn ghost" data-action="reset">Alle Daten löschen</button></section><p id="message" role="status" aria-live="polite"></p>';
+  return '<div class="eyebrow">Deine App</div><h1>Einstellungen</h1><section class="lesson-box"><h2>Schülerprofil</h2><form id="settings-form"><div class="formrow"><div><label class="fieldlabel" for="settings-name">Name / Spitzname</label><input class="field" id="settings-name" name="name" maxlength="40" required value="'+escapeHTML(state.profile.name)+'"></div><div><label class="fieldlabel" for="settings-grade">Klasse</label><select class="field" id="settings-grade" name="grade">'+[5,6,7,8].map(n=>'<option value="'+n+'"'+(String(n)===String(state.profile.grade)?' selected':'')+'>'+n+'. Klasse</option>').join("")+'</select></div></div><label class="check"><input name="short" type="checkbox"'+(state.settings.short?' checked':'')+'> Kurze Erklärungen bevorzugen</label><div class="actions"><button class="btn primary" type="submit">Speichern</button></div></form></section>'+profilesSection()+'<section class="lesson-box"><h2>Lernstand sichern</h2><p>Dein Fortschritt wird lokal auf diesem Gerät gespeichert. Sichere ihn als Datei, wenn du den Browser wechselst oder Daten löschst.</p><div class="actions"><button class="btn" data-action="export">Sicherung herunterladen</button><label class="btn" for="import-file">Sicherung importieren</label><input id="import-file" type="file" accept="application/json,.json" class="sr-only"></div></section><section class="lesson-box warning"><h2>Daten löschen</h2><p>Alle lokalen Lernstände und das Profil auf diesem Gerät zurücksetzen.</p><button class="btn ghost" data-action="reset">Alle Daten löschen</button></section><p id="message" role="status" aria-live="polite"></p>';
  }
  function render(){
   if(!state.profile){renderOnboard();return;}
@@ -181,6 +185,7 @@
   const action=event.target.closest("[data-action]");if(!action)return;
   const type=action.dataset.action;
   if(type==="start"){startPractice(action.dataset.id);return;}
+  if(type==="switch-profile"){switchProfile(action.dataset.id);return;}
   if(type==="toggle-short"){state.settings.short=!state.settings.short;save();render();return;}
   if(type==="print"){window.print();return;}
   if(type==="hint"){const t=(session.questions||getLesson(session.id).questions)[session.index];result={correct:false,title:"Ein kleiner Tipp",body:t.hint};render();return;}
@@ -189,14 +194,26 @@
   if(type==="export"){
    const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="mathe-hero-lernstand.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);notify("Sicherung wurde erstellt.");return;
   }
-  if(type==="reset"&&window.confirm("Wirklich alle Daten auf diesem Gerät löschen?")){try{localStorage.removeItem(KEY);}catch{}state.profile=null;state.progress={};state.settings={short:false};go("home");}
+  if(type==="reset"&&window.confirm("Wirklich ALLE Profile und Lernstände auf diesem Gerät löschen?")){
+   try{localStorage.removeItem(KEY);}catch{}
+   state.profile=null;state.progress={};state.settings={short:false};state.profiles={};state.activeProfileId=null;go("home");
+  }
  });
  document.addEventListener("submit",event=>{
   if(event.target.id==="welcome-form"){
    event.preventDefault();const f=new FormData(event.target),name=String(f.get("name")||"").trim();
    if(!name)return;
+   state.activeProfileId="profile-"+Date.now();
+   state.progress={};state.settings={short:f.has("short")};
    state.profile={name:name.slice(0,40),grade:String(f.get("grade")||"6")};
-   state.settings.short=f.has("short");save();go("home");return;
+   save();go("home");return;
+  }
+  if(event.target.id==="new-profile-form"){
+   event.preventDefault();const f=new FormData(event.target),name=String(f.get("name")||"").trim();
+   if(!name)return;
+   const id="profile-"+Date.now()+"-"+Math.floor(Math.random()*100000);
+   state.activeProfileId=id;state.profile={name:name.slice(0,40),grade:String(f.get("grade")||"6")};
+   state.progress={};state.settings={short:false};save();go("home");return;
   }
   if(event.target.id==="settings-form"){
    event.preventDefault();const f=new FormData(event.target),name=String(f.get("name")||"").trim();
@@ -231,11 +248,32 @@
   if(file.size>1024*1024){notify("Diese Sicherung ist zu groß.");return;}
   try{
    const data=JSON.parse(await file.text());
-   if(data.version!==1||!data.profile||typeof data.profile.name!=="string"||!data.progress||typeof data.progress!=="object"||Array.isArray(data.progress))throw Error("ungültig");
-   if(!window.confirm("Aktuellen Lernstand durch die Sicherung ersetzen?"))return;
-   state.profile={name:String(data.profile.name).slice(0,40),grade:["5","6","7","8"].includes(String(data.profile.grade))?String(data.profile.grade):"6"};
-   state.settings={short:!!data.settings?.short};
-   state.progress=Object.fromEntries(LESSONS.filter(l=>data.progress[l.id]).map(l=>{const p=data.progress[l.id];return [l.id,{best:Math.max(0,Math.min(l.questions.length,Number(p.best)||0)),attempts:Math.max(0,Math.min(100000,Number(p.attempts)||0)),passed:!!p.passed,updated:typeof p.updated==="string"?p.updated:""}];}));
+   const sanitizeProfile=p=>{
+    if(!p||typeof p.name!=="string"||!p.name.trim())throw Error("Ungültiges Profil");
+    return {name:p.name.trim().slice(0,40),grade:["5","6","7","8"].includes(String(p.grade))?String(p.grade):"6"};
+   };
+   const cleanProgress=progress=>{
+    if(!progress||typeof progress!=="object"||Array.isArray(progress))throw Error("Ungültiger Lernstand");
+    return Object.fromEntries(LESSONS.filter(l=>progress[l.id]).map(l=>{
+      const p=progress[l.id],n=Number(p.best)||0,attempts=Number(p.attempts)||0;
+      return [l.id,{best:Math.max(0,Math.min(1000,n)),attempts:Math.max(0,Math.min(100000,attempts)),
+        passed:!!p.passed,reviewStreak:Math.max(0,Math.min(4,Number(p.reviewStreak)||0)),secure:!!p.secure,
+        nextReview:typeof p.nextReview==="string"&&Number.isFinite(Date.parse(p.nextReview))?p.nextReview:null,
+        updated:typeof p.updated==="string"?p.updated:""}];
+    }));
+   };
+   if(!window.confirm("Vorhandenen Lernstand durch die Sicherung ersetzen?"))return;
+   if(data.version===1){
+    state.profile=sanitizeProfile(data.profile);state.progress=cleanProgress(data.progress);
+    state.settings={short:!!data.settings?.short};
+    state.activeProfileId="imported-1";state.profiles={};
+   }else if(data.version===2&&data.profiles&&typeof data.profiles==="object"){
+    const entries=Object.entries(data.profiles).slice(0,15).filter(([id,p])=>p?.profile&&p?.progress).map(([id,p],i)=>
+      ["profile-"+i,{profile:sanitizeProfile(p.profile),progress:cleanProgress(p.progress),settings:{short:!!p.settings?.short}}]);
+    if(!entries.length)throw Error("Leere Sicherung");
+    state.profiles=Object.fromEntries(entries);state.activeProfileId=entries[0][0];
+    state.profile=entries[0][1].profile;state.progress=entries[0][1].progress;state.settings=entries[0][1].settings;
+   }else throw Error("Unbekanntes Format");
    save();go("progress");
   }catch{notify("Die Sicherungsdatei konnte nicht gelesen werden.");}
  });
