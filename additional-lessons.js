@@ -73,7 +73,7 @@
  [Q("2(x + 2) = 10. x = ?","3","2x+4=10.","2x=6, x=3."),Q("3(x + 1) = 15. x = ?","4","3x+3=15.","3x=12, x=4."),Q("4(x - 2) = 8. x = ?","4","4x-8=8.","4x=16, x=4.")]),
  L("koordinaten","graph","Koordinatensystem verstehen","Ein Punkt hat eine Position, zum Beispiel (2|3).","Für Karten, Zeichnungen und Graphen.",
  ["Die x-Achse läuft waagerecht, die y-Achse senkrecht.","Bei (2|3) gehst du erst 2 nach rechts.","Danach 3 nach oben."],
- "P(2|3)","Die erste Zahl ist die x-Koordinate, die zweite die y-Koordinate.","Erst x, dann y.","Vertausche nicht x- und y-Achse.",
+ "P(2|3) zeigt x=2 und y=3","Die erste Zahl ist die x-Koordinate, die zweite die y-Koordinate.","Erst x, dann y.","Vertausche nicht x- und y-Achse.",
  [Q("Bei P(4|2): x-Koordinate?","4","Die erste Zahl vor dem Strich.","4."),Q("Bei P(4|2): y-Koordinate?","2","Die zweite Zahl nach dem Strich.","2."),Q("Bei P(-3|5): x-Koordinate?","-3","Links von null sind negative x-Werte.","-3.")]),
  L("graphen","graph","Graphen und Wertetabellen","Ein Graph zeigt, wie sich zwei Größen gemeinsam verändern.","Um Abhängigkeiten sichtbar zu machen.",
  ["Lege eine Tabelle mit x-Werten an.","Berechne die passenden y-Werte.","Trage die Zahlenpaare als Punkte ein.","Verbinde Punkte nur, wenn es für den Zusammenhang sinnvoll ist."],
