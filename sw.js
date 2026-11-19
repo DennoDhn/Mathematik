@@ -1,10 +1,10 @@
 /* MATHE HERO: GitHub-Pages-safe application shell, network-first on reconnection.
    Built-in URLs are relative to the Service Worker scope, so project subpaths work. */
-const CACHE = "mathe-hero-offline-v10";
+const CACHE = "mathe-hero-offline-v11";
 const ASSETS = [
  "./","./index.html","./styles.css",
  "./lessons.js","./math-engine.js","./curriculum.js","./additional-lessons.js",
- "./visuals.js","./app.js","./manifest.webmanifest","./icon.svg",
+ "./visuals.js","./tutorials.js","./app.js","./manifest.webmanifest","./icon.svg",
  "./icons/icon-192.png","./icons/icon-512.png","./icons/apple-touch-icon.png"
 ];
 self.addEventListener("install",event=>{
