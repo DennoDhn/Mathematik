@@ -25,7 +25,7 @@ function boot(){
  const localStorage={getItem(key){return Object.hasOwn(store,key)?store[key]:null},setItem(key,value){store[key]=value},removeItem(key){delete store[key]}};
  const FormData=class{constructor(target){this.data=target.fields||{}}get(key){return this.data[key]}has(key){return Object.hasOwn(this.data,key)}};
  const context=vm.createContext({window,document,navigator,localStorage,location:{protocol:"file:"},FormData,console,Date,Math,setTimeout,URL,Blob});
- for(const name of ["lessons.js","math-engine.js","curriculum.js","additional-lessons.js","visuals.js","app.js"])
+ for(const name of ["lessons.js","math-engine.js","curriculum.js","additional-lessons.js","visuals.js","tutorials.js","app.js"])
   vm.runInContext(file(name),context,{filename:name});
  const emit=(type,event)=>{for(const fn of events[type]||[])fn(event)};
  const nav=(view,id)=>emit("click",{target:{closest(sel){return sel==="[data-go]"?{dataset:{go:view,id}}:null}}});
@@ -39,7 +39,25 @@ assert.match(a.root.innerHTML,/Wie sollen wir dich nennen/);
 a.form("welcome-form",{name:"Testperson",grade:"6"});
 assert.match(a.root.innerHTML,/Hallo, Testperson/);
 assert.equal(JSON.parse(store["mathe-hero-progress-v1"]).version,2);
+a.nav("topic","brueche");
+assert.match(a.root.innerHTML,/Brüche richtig begreifen/,"Die Themenwelt braucht eine theoretische Einführung");
+a.nav("classroom","kuerzen");
+assert.match(a.root.innerHTML,/Was bedeutet das eigentlich/);
+a.action("teach-forward");
+assert.match(a.root.innerHTML,/Warum funktioniert die Regel/);
+a.action("teach-forward");
+assert.match(a.root.innerHTML,/Gemeinsame Aufgabe 1 von 3/);
+for(let n=0;n<3;n++){
+ a.action("teach-reveal");
+ assert.match(a.root.innerHTML,/Dein erster Schritt/);
+ a.action("teach-reveal");
+ assert.match(a.root.innerHTML,/Gemeinsam zur Lösung/);
+ a.action("teach-next-example");
+}
+assert.match(a.root.innerHTML,/Jetzt kennst du die Rechenidee/);
+assert.equal(JSON.parse(store["mathe-hero-progress-v1"]).progress.kuerzen.theoryCompleted,true);
 a.nav("lesson","kuerzen");
+assert.match(a.root.innerHTML,/Theorieunterricht wiederholen/);
 assert.match(a.root.innerHTML,/Bruch-Labor/);
 a.action("start","kuerzen");
 assert.match(a.root.innerHTML,/Aufgabe 1 von 6/);
