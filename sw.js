@@ -1,6 +1,6 @@
 /* GitHub Pages / subpath-friendly offline shell. Bump version when changing assets. */
-const CACHE = "mathe-hero-shell-v2";
-const ASSETS = ["./","./index.html","./styles.css","./app.js","./lessons.js","./manifest.webmanifest","./icon.svg"];
+const CACHE = "mathe-hero-shell-v3";
+const ASSETS = ["./","./index.html","./styles.css","./app.js","./lessons.js","./math-engine.js","./curriculum.js","./visuals.js","./manifest.webmanifest","./icon.svg"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
