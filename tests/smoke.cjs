@@ -5,10 +5,13 @@ const assert=require("node:assert/strict");
 const path=require("node:path");
 const base=path.resolve(__dirname,"..");
 const window={};
-vm.runInNewContext(fs.readFileSync(path.join(base,"lessons.js"),"utf8"),{window});
+const context={window};
+vm.createContext(context);
+for(const name of ["lessons.js","math-engine.js","curriculum.js","additional-lessons.js"])
+ vm.runInContext(fs.readFileSync(path.join(base,name),"utf8"),context,{filename:name});
 const {GROUPS,LESSONS}=window.MATHE_DATA;
-assert.ok(Array.isArray(GROUPS)&&GROUPS.length>=8,"Themenwelten fehlen");
-assert.ok(Array.isArray(LESSONS)&&LESSONS.length>=25,"Zu wenige Lektionen");
+assert.ok(Array.isArray(GROUPS)&&GROUPS.length>=9,"Themenwelten fehlen");
+assert.ok(Array.isArray(LESSONS)&&LESSONS.length>=56,"Zu wenige Lektionen");
 const ids=new Set();
 for(const l of LESSONS){
  assert.ok(l.id&&!ids.has(l.id),"Doppelte/fehlende Lektion-ID: "+l.id);
@@ -24,7 +27,7 @@ for(const l of LESSONS){
  }
 }
 const precache=fs.readFileSync(path.join(base,"sw.js"),"utf8");
-for(const name of ["index.html","styles.css","app.js","lessons.js","manifest.webmanifest","icon.svg"]){
+for(const name of ["index.html","styles.css","app.js","lessons.js","math-engine.js","curriculum.js","additional-lessons.js","visuals.js","manifest.webmanifest","icon.svg","icons/icon-192.png","icons/icon-512.png","icons/apple-touch-icon.png"]){
  assert.ok(fs.existsSync(path.join(base,name)),"Datei fehlt: "+name);
  assert.ok(precache.includes('"./'+name+'"'),"Offline-Cache fehlt: "+name);
 }
