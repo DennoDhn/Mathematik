@@ -5,12 +5,13 @@ const file=n=>fs.readFileSync(path.join(base,n),"utf8");
 const store={};
 function boot(){
  const root={innerHTML:"",focus(){}},events={},windowEvents={},documentElement={dataset:{}};
- let entered="";
+ let entered="",guideEntered="";
  const document={
   documentElement,
   querySelector(selector){
    if(selector==="#app"||selector==="#content")return root;
    if(selector==="#answer")return {value:entered,focus(){},select(){}};
+   if(selector==="#guide-answer")return {value:guideEntered,focus(){},select(){}};
    if(selector==="#connection")return {textContent:"",className:"pill online"};
    return null;
   },
@@ -32,7 +33,8 @@ function boot(){
  const action=(kind,id)=>emit("click",{target:{closest(sel){return sel==="[data-action]"?{dataset:{action:kind,id}}:null}}});
  const form=(id,fields)=>emit("submit",{target:{id,fields},preventDefault(){}});
  const input=value=>{entered=value;emit("input",{target:{id:"answer",value,matches(){return false}}})};
- return {root,window,documentElement,store,events,nav,action,form,input,windowEvents};
+ const guidedInput=value=>{guideEntered=value;emit("input",{target:{id:"guide-answer",value}})};
+ return {root,window,documentElement,store,events,nav,action,form,input,guidedInput,windowEvents};
 }
 const a=boot();
 assert.match(a.root.innerHTML,/Wie sollen wir dich nennen/);
@@ -48,6 +50,9 @@ assert.match(a.root.innerHTML,/Warum funktioniert die Regel/);
 a.action("teach-forward");
 assert.match(a.root.innerHTML,/Gemeinsame Aufgabe 1 von 3/);
 assert.match(a.root.innerHTML,/guide-answer-form/,"Gemeinsame Aufgabe braucht eine eigene Antwortmöglichkeit");
+a.guidedInput("1/2");
+a.form("guide-answer-form",{});
+assert.match(a.root.innerHTML,/Sehr gut/,"Richtige gemeinsame Antwort sollte positives Feedback geben");
 for(let n=0;n<3;n++){
  a.action("teach-reveal");
  assert.match(a.root.innerHTML,/Dein erster Schritt/);
