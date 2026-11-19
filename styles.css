@@ -310,3 +310,25 @@ hr{border:0;border-top:1px solid var(--edge);margin:20px 0}
 .math-frac>span:first-child{border-bottom:2px solid currentColor;padding:0 .2em .12em}
 .math-frac>span:last-child{padding:.12em .2em 0}
 .question .math-frac{font-size:1.05em}
+
+/* Paperlight contrast overrides: cards and hero must not inherit midnight-only surfaces. */
+:root[data-theme="light"] .hero{
+ background:linear-gradient(115deg,#FFFFFF 0%,#F0F6FF 65%,#E8E8FD 100%);
+ border-color:#CADCF1;color:#19253D;
+ box-shadow:0 16px 50px rgba(51,97,163,.09);
+}
+:root[data-theme="light"] .hero .lead,
+:root[data-theme="light"] .hero p{color:#415571}
+:root[data-theme="light"] .hero::before{border-color:rgba(74,124,198,.17);box-shadow:0 0 0 48px rgba(80,133,205,.045),0 0 0 95px rgba(146,130,219,.03)}
+:root[data-theme="light"] .card{
+ background:linear-gradient(145deg,#FFFFFF 0%,#F5F8FF 100%);
+ color:var(--text);border-color:#D1DDEA;box-shadow:0 8px 25px rgba(23,55,107,.035);
+}
+:root[data-theme="light"] .card::before{background:linear-gradient(135deg,rgba(81,149,227,.2),rgba(166,137,228,.06))}
+:root[data-theme="light"] .card:nth-child(2n)::before{background:linear-gradient(135deg,rgba(160,133,225,.22),rgba(89,183,173,.07))}
+:root[data-theme="light"] .card:nth-child(3n)::before{background:linear-gradient(135deg,rgba(93,168,78,.14),rgba(81,150,228,.07))}
+:root[data-theme="light"] .card h3,:root[data-theme="light"] .card .bottom{color:var(--text)}
+:root[data-theme="light"] .card p{color:#50637F}
+:root[data-theme="light"] .card .meta{color:#155FBC}
+:root[data-theme="light"] .lab-section{background:linear-gradient(145deg,#FAFCFF,#F2F6FF);border-color:#C9D9EF}
+:root[data-theme="light"] .lab-heading h2{color:#19253D}
