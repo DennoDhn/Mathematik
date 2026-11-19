@@ -24,7 +24,7 @@ Eine kostenlose, werbefreie, installierbare **Mathe-Lern-PWA** für Kinder und J
 1. Webseite öffnen, Spitznamen eingeben und Klasse wählen.
 2. Passendes Thema öffnen. Empfehlung und alle anderen Themen sind jederzeit anwählbar.
 3. Theorie lesen, interaktives Labor verändern, dann Übungen lösen.
-4. Bei Schwierigkeiten **Tipp anzeigen**, **Ich verstehe das nicht** (in der späteren Roadmap vorgesehen) oder **Lösung zeigen**; falsche Antworten kosten keine Punkte.
+4. Bei Schwierigkeiten **Tipp anzeigen**, **Ich verstehe das nicht** oder **Lösung zeigen**; falsche Antworten kosten keine Punkte.
 5. In Einstellungen den Lernmodus, das Theme und ggf. Geschwisterprofil wählen; Lernstand regelmäßig sichern.
 
 ## Als PWA installieren / Offline
