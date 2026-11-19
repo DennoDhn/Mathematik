@@ -103,7 +103,7 @@
   const due=LESSONS.filter(l=>isDue(state.progress[l.id])||(state.progress[l.id]?.passed&&state.progress[l.id]?.secure===false)).length;
   const primary=pending?viewButton("Letzte Übung fortsetzen","resume","","primary"):viewButton("Meine nächste Mission","lesson",next.id,"primary");
   return '<div class="hero hero-dashboard"><div class="hero-content"><div class="eyebrow">DEIN MATHE-STUDIO · KLASSE '+escapeHTML(state.profile.grade)+'</div>'+
-   '<h1>Hey, '+escapeHTML(state.profile.name)+'!<span class="hero-highlight">Bereit für den nächsten Schritt?</span></h1>'+
+   '<h1>Hallo, '+escapeHTML(state.profile.name)+'!<span class="hero-highlight">Bereit für den nächsten Schritt?</span></h1>'+
    '<p class="lead">Wenig lesen. Mehr verstehen. Übe in deinem Tempo und finde heraus, wie Mathe wirklich funktioniert.</p>'+
    '<div class="hero-spotlight"><span class="hero-spotlight-dot"></span><span>'+(pending?'Deine Übung wartet auf dich':"Empfohlen: "+escapeHTML(next.title))+'</span></div>'+
    '<div class="actions">'+primary+viewButton("Lernwelten entdecken","topics","","ghost")+'</div></div>'+
