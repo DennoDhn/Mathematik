@@ -332,3 +332,52 @@ hr{border:0;border-top:1px solid var(--edge);margin:20px 0}
 :root[data-theme="light"] .card .meta{color:#155FBC}
 :root[data-theme="light"] .lab-section{background:linear-gradient(145deg,#FAFCFF,#F2F6FF);border-color:#C9D9EF}
 :root[data-theme="light"] .lab-heading h2{color:#19253D}
+
+
+/* ACADEMY EXPERIENCE 0.6 — theme-aware illustrated world cards, focused study dashboard */
+.hero-dashboard{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.58fr);gap:12px;align-items:center;min-height:355px;background:linear-gradient(123deg,#101f38 2%,#152e4e 51%,#1a2049 100%)}
+.hero-dashboard::before{right:-75px;top:-95px}.hero-dashboard::after{display:none}
+.hero-dashboard .hero-content{min-width:0;position:relative;z-index:2}
+.hero-dashboard h1{font-size:clamp(2.05rem,4vw,3.65rem);max-width:17ch;margin:6px 0 12px}
+.hero-highlight{display:block;color:#D4F7AB;font-size:.65em;letter-spacing:-.02em;margin-top:9px;line-height:1.3}
+.hero-spotlight{display:inline-flex;align-items:center;gap:10px;max-width:100%;margin:8px 0 20px;padding:9px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(200,226,255,.19);border-radius:11px;color:#E0F1FF;font-size:.84rem;font-weight:740}
+.hero-spotlight-dot{width:9px;height:9px;flex:none;border-radius:50%;background:#B7F56C;box-shadow:0 0 0 5px rgba(183,245,108,.1)}
+.mission-art{min-height:255px;position:relative;display:grid;place-items:center;isolation:isolate;pointer-events:none}
+.mission-art .orbit{position:absolute;width:235px;aspect-ratio:1;border-radius:50%;border:1px dashed rgba(160,206,255,.21);transform:rotate(-23deg)}
+.mission-art .orbit-2{width:303px;border-style:solid;border-color:rgba(161,214,241,.12)}
+.mission-core{display:grid;place-items:center;width:148px;height:148px;border-radius:35px;background:linear-gradient(145deg,#B9FA7E 0%,#69D6CC 100%);transform:rotate(-11deg);color:#0B2634;font-size:6rem;line-height:1;font-weight:1000;box-shadow:0 27px 60px rgba(61,179,164,.17),inset 0 0 0 7px rgba(255,255,255,.13)}
+.mission-core span{position:absolute;bottom:10px;right:14px;font-size:2.1rem;color:#19466A;transform:rotate(11deg)}
+.mission-math{position:absolute;display:grid;place-items:center;min-width:59px;height:59px;padding:0 12px;border-radius:16px;background:#243B60;color:#E6F3FF;border:1px solid rgba(147,209,255,.31);font-size:1.6rem;font-weight:860;box-shadow:0 15px 34px rgba(0,0,0,.22)}
+.mission-math-a{left:1%;top:16%;transform:rotate(13deg)}.mission-math-b{right:0;top:12%;transform:rotate(-12deg);color:#B7F56C}.mission-math-c{right:5%;bottom:7%;transform:rotate(12deg)}.mission-math-d{left:4%;bottom:10%;transform:rotate(-12deg);font-size:1.24rem}
+.dashboard-section-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin:37px 0 15px}
+.dashboard-section-head .eyebrow{margin-bottom:5px}.dashboard-section-head h2{margin:0}
+.dashboard-section-head .btn{min-height:39px}
+.dashboard-micro{font-size:.83rem;color:var(--muted);text-align:right}
+.world-grid{gap:17px}
+.world-card{--world:#74B9FF;min-height:218px;background:radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--world) 17%,transparent),transparent 64%),linear-gradient(160deg,var(--panel),var(--base));border-color:color-mix(in srgb,var(--world) 24%,var(--edge))}
+.world-card::before{display:none}
+.world-card[data-world="brueche"]{--world:#C0A5FF}
+.world-card[data-world="dezimal"]{--world:#77DEC6}
+.world-card[data-world="rational"]{--world:#FFB27C}
+.world-card[data-world="prozent"]{--world:#B7F56C}
+.world-card[data-world="algebra"]{--world:#9EADFF}
+.world-card[data-world="geo"]{--world:#FFACB1}
+.world-card[data-world="daten"]{--world:#77C6FF}
+.world-card[data-world="graph"]{--world:#C5A2F6}
+.world-top{display:flex;justify-content:space-between;align-items:flex-start;gap:15px}
+.world-glyph{display:grid;place-items:center;width:72px;min-width:72px;height:69px;margin:-8px -8px -18px 0;border-radius:19px;background:color-mix(in srgb,var(--world) 20%,var(--panel));color:var(--world);border:1px solid color-mix(in srgb,var(--world) 35%,transparent);font-size:2.35rem;font-weight:900;letter-spacing:-.08em;transform:rotate(-7deg);font-variant-numeric:tabular-nums}
+.world-card h3{margin:19px 0 7px}
+.world-card:hover .world-glyph{transform:rotate(1deg) scale(1.04);transition:transform .18s ease}
+.world-enter{display:grid;place-items:center;width:28px;height:28px;flex:none;background:color-mix(in srgb,var(--world) 18%,transparent);color:var(--world);border-radius:50%;font-size:1.15rem}
+.world-card .bar>span{background:linear-gradient(90deg,var(--world),var(--lime))}
+:root[data-theme="light"] .hero-dashboard{background:linear-gradient(117deg,#F9FCFF,#E8F0FE 63%,#F0EAFB);border-color:#CDDCEE}
+:root[data-theme="light"] .hero-dashboard .hero-highlight{color:#2F674B}
+:root[data-theme="light"] .hero-spotlight{background:#E2ECF9;border-color:#C1D3EB;color:#1A3556}
+:root[data-theme="light"] .world-card{background:radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--world) 15%,transparent),transparent 64%),linear-gradient(160deg,#fff,#F6F9FF)}
+:root[data-theme="light"] .world-glyph{background:color-mix(in srgb,var(--world) 15%,#FFFFFF);color:color-mix(in srgb,var(--world) 76%,#14385B)}
+:root[data-theme="light"] .world-card h3{color:#19253D}
+:root[data-theme="light"] .world-card .meta{color:#3D6082}
+@media(max-width:1040px){.hero-dashboard{grid-template-columns:minmax(0,1fr) 185px}.mission-art .orbit-2{width:210px}.mission-art .orbit-1{width:165px}.mission-core{width:115px;height:115px;font-size:4.5rem;border-radius:27px}.mission-math{min-width:44px;height:44px;font-size:1.2rem}}
+@media(max-width:690px){.hero-dashboard{grid-template-columns:1fr}.mission-art{display:none}.hero-dashboard{min-height:auto}.dashboard-section-head{align-items:start;gap:9px}.dashboard-micro{max-width:155px}}
+@media(max-width:490px){.world-card{min-height:174px}.world-glyph{height:59px;min-width:60px;width:60px;font-size:1.9rem}.hero-dashboard .hero-content h1{font-size:2.15rem}.dashboard-section-head h2{font-size:1.28rem}}
+@media(prefers-reduced-motion:reduce){.world-card:hover .world-glyph{transform:none}}
