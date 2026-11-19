@@ -63,8 +63,7 @@
    return {correct:equal(a,b)};
   }
   const a=parse(response),b=parse(answer);
-  if(!a||!b)return {correct:normalized(response)===normalized(answer),
-    reason:"Nutze die Schreibweise aus der Frage, zum Beispiel 3/4 oder 2 1/3."};
+  if(!a||!b)return {correct:normalized(response)===normalized(answer)};
   if(!equal(a,b))return {correct:false};
   if(mode==="decimal"&&response.includes("/"))return {correct:false,reason:"Bitte als Kommazahl schreiben."};
   const requestedDigits=question.match(/auf (eine|zwei|drei) nachkommastell/);
@@ -80,6 +79,32 @@
   }
   if(mode==="expanded"&&normalized(response)!==normalized(answer))return {correct:false,reason:"Der Wert stimmt. Gesucht ist die Erweiterung mit dem angegebenen Faktor."};
   return {correct:true};
+ }
+ function diagnose(input,task){
+  const value=parse(String(input).replace("%","")),answer=parse(String(task.answer).replace("%",""));
+  const question=String(task.question||"");
+  if(!value||!answer)return null;
+  const bad=(v)=>equal(value,v);
+  if(answer.n<0n&&value.n===-answer.n&&value.d===answer.d)
+    return "Die Zahl ist richtig, aber das Vorzeichen nicht. Prüfe die Minus-Regel.";
+  if((answer.n!==0n)&&(
+    bad(rational(answer.n*10n,answer.d))||bad(rational(answer.n*100n,answer.d))||
+    bad(rational(answer.n,answer.d*10n))||bad(rational(answer.n,answer.d*100n))
+  )&&(/[.,]/.test(question)||/komma|dezimal|prozent/i.test(question)))
+    return "Das Ergebnis unterscheidet sich um den Faktor 10 oder 100. Prüfe das Komma bzw. die Prozentumrechnung.";
+  const plus=question.match(/(\d+)\s*\/\s*(\d+)\s*\+\s*(\d+)\s*\/\s*(\d+)/);
+  if(plus){
+    const [a,b,c,d]=plus.slice(1).map(BigInt);
+    if(b+d!==0n&&bad(rational(a+c,b+d)))
+      return "Vielleicht hast du Zähler und Nenner addiert. Mach die Nenner erst gleich und addiere dann nur oben.";
+  }
+  const before=question.match(/(?:Kürze|Erweitere)\s+(\d+)\s*\/\s*(\d+)/i);
+  if(before&&String(input).includes("/")){
+    const [a,b]=before.slice(1).map(BigInt),given=parse(input);
+    if(given&&given.d===b&&given.n!==a)
+      return "Du hast vielleicht nur den Zähler verändert. Beim Kürzen oder Erweitern müssen sich beide Zahlen gemeinsam verändern.";
+  }
+  return null;
  }
  function random(seed){
   let s=(seed>>>0)||1;
@@ -152,5 +177,5 @@
   for(let i=selected.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[selected[i],selected[j]]=[selected[j],selected[i]];}
   return selected;
  }
- global.MATHE_ENGINE={parse,rational,gcd,equal,check,createSet,generator,hash};
+ global.MATHE_ENGINE={parse,rational,gcd,equal,check,diagnose,createSet,generator,hash};
 })(window);
