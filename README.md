@@ -5,6 +5,18 @@ Eine kostenlose, werbefreie, installierbare **Mathe-Lern-PWA** für Kinder und J
 **Seite (GitHub Pages):** https://dennodhn.github.io/Mathematik/  
 **Repository:** https://github.com/DennoDhn/Mathematik
 
+## Update 0.6 – Premium-Lernzentrale und zuverlässiger üben
+
+- Neue visuelle Startseite mit animierungsarmen Mathematik-Motiven und individuell gestalteten Themenkarten in Midnight und Paperlight.
+- Angefangene Übungsrunde bleibt beim Navigieren lokal gespeichert. Die Startseite bietet direkt „Letzte Übung fortsetzen“.
+- Lernempfehlungen und Wiederholung berücksichtigen auch spätere unsichere Ergebnisse.
+- „Ich verstehe das nicht“ erklärt wichtige Themen mit alternativen Alltagsbeispielen.
+- Nur **richtige Antworten im ersten Versuch ohne Tipps** zählen für die selbstständige Erfolgsquote; Lösungen mit Hilfe bleiben weiterhin ein Lernerfolg und können ohne Bestrafung weitergeübt werden.
+- Testfälle für Fortsetzen, Entwürfe, Darstellung und Antworten mit Tipps wurden ergänzt.
+- Service-Worker-Cache wurde für neue Ressourcen aktualisiert.
+
+**Geprüft anhand des Repository-Codes:** 56 Lektionen, 170 feste und 5.275 stichprobenartig generierte korrekte Erwartungsantworten (25 Aufgabensätze pro Lektion), sechsmal Spezialfälle sowie eine simulierte Bedienungsfolge. Nicht bestätigt: visuelle Screenshots, reale Geräteinstallation, Safari/iPadOS und produktive Offline-Nutzung. Details in [QA-STATUS-2026-11-19.md](docs/QA-STATUS-2026-11-19.md).
+
 ## Was heute enthalten ist
 
 - **56 Lektionen**, neun Themenwelten, **170 feste Übungsaufgaben** mit Hinweisen und Musterlösungen.
